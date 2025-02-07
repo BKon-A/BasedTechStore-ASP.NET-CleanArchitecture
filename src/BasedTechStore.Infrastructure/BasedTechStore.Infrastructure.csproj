@@ -1,11 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <Compile Remove="Data\StoreMigrations\**" />
+    <EmbeddedResource Remove="Data\StoreMigrations\**" />
+    <None Remove="Data\StoreMigrations\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BasedTechStore.Application\BasedTechStore.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\StoreMigrations\" />
+    <Folder Include="Data\" />
     <Folder Include="Repositories\" />
   </ItemGroup>
 
