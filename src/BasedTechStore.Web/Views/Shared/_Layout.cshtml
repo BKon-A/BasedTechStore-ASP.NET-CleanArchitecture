@@ -19,14 +19,26 @@
 
                     <div class="navbar-collapse collapse d-sm-inline-flex">
                         <ul class="navbar-nav flex-grow-1">
-                            <li class="nav-item ms-2">
-                                <a class="navbar-brand" asp-area="" asp-controller="Account" asp-action="Register" data-bs-toggle="modal"
-                                    data-bs-target="#regModal"><i class="bi bi-person-plus"></i> Реєстрація </a>
-                            </li>
-                            <li class="nav-item ms-2">
-                                <a class="navbar-brand" asp-area="" asp-controller="Account" asp-action="Login" data-bs-toggle="modal"
-                                    data-bs-target="#authModal"><i class="bi bi-box-arrow-in-right"></i> Авторизація</a>
-                            </li>
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <li class="nav-item ms-2">
+                                    <a class="navbar-brand" asp-area="" asp-controller="Account" asp-action="Register" data-bs-toggle="modal"
+                                        data-bs-target="#regModal"><i class="bi bi-person-plus"></i> Реєстрація </a>
+                                </li>
+                                <li class="nav-item ms-2">
+                                    <a class="navbar-brand" asp-area="" asp-controller="Account" asp-action="Login" data-bs-toggle="modal"
+                                        data-bs-target="#authModal"><i class="bi bi-box-arrow-in-right"></i> Авторизація</a>
+                                </li>
+                            }
+                            else 
+                            {
+                                
+                                <li class="nav-item ms-2">
+                                    <a class="navbar-brand" asp-area="" asp-controller="Account" asp-action="Logout">Вийти</a>
+                                </li>
+                            }
+                            
+                            
                         </ul>
 
                         <!--Registration modal-->
