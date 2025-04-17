@@ -1,0 +1,58 @@
+﻿/* Вирівнювання елементів меню */
+.navbar .user-dropdown .nav-link,
+.navbar .user-dropdown .dropdown-toggle {
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+/* Менший розмір для кнопки "Головна" */
+.navbar .navbar-brand i {
+    margin-right: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.navbar .navbar-brand {
+    font-size: 0.9rem;
+}
+
+/* Вирівнювання тексту по центру, заборона переносу */
+.navbar .nav-link {
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap; /* Заборонити перенос тексту */
+}
+
+/* Вертикальне вирівнювання елементів меню */
+.navbar .navbar-nav .nav-item {
+    display: flex;
+    align-items: center;
+}
+
+/* Пошукове поле */
+.navbar .input-group {
+    width: clamp(180px, 30vw, 400px); /* адаптивна ширина */
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+@media (max-width: 768px) {
+    .navbar .input-group {
+        max-width: 100%;
+        margin-top: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    dl .row dt, dl.row dd
+
+{
+    display: block;
+    width: 100%;
+}
+
+dl.row dt {
+    margin-top: 1rem;
+    font-weight: bold;
+}

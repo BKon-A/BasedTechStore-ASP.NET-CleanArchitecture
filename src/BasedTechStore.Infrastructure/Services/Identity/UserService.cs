@@ -6,7 +6,7 @@ using BasedTechStore.Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
-namespace BasedTechStore.Infrastructure.Identity.Services
+namespace BasedTechStore.Infrastructure.Services.Identity
 {
     public class UserService : IUserService
     {
@@ -52,7 +52,7 @@ namespace BasedTechStore.Infrastructure.Identity.Services
             user.FullName = userDto.FullName;
             user.Email = userDto.Email;
             user.PhoneNumber = userDto.PhoneNumber;
-            user.UserName = userDto.UserName;
+            //user.UserName = userDto?.UserName;
 
             var result = await _userManager.UpdateAsync(user);
             return result.Succeeded

@@ -1,0 +1,47 @@
+﻿@using BasedTechStore.Application.DTOs.Product
+@model IEnumerable<ProductDto>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Управління товарами</h4>
+    <a href="@Url.Action("Create", "Product")" class="btn btn-success" id="btnAddProduct">
+        <i class="bi bi-plus-circle"></i> Додати продукт
+    </a>
+</div>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Назва</th>
+            <th>Опис</th>
+            <th>Ціна</th>
+            <th>Бренд</th>
+            <th>Категорія</th>
+            <th>Підкатегорія</th>
+            <th>Зображення</th>
+            <th>Дії</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model)
+        {
+            <tr>
+                <td>@product.Name</td>
+                <td>@product.Description</td>
+                <td>@product.Price.ToString("C")</td>
+                <td>@product.Brand</td>
+                <td>@product.CategoryName</td>
+                <td>@product.SubCategoryName</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                    {
+                        <img src="@product.ImageUrl" alt="Зображення" style="max-width: 60px;" />
+                    }
+                </td>
+                <td>
+                    <a href="#" class="btn btn-sm btn-primary me-1"><i class="bi bi-pencil"></i></a>
+                    <a href="#" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

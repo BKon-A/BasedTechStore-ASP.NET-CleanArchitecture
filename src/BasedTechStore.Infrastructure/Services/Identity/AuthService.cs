@@ -12,7 +12,7 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using BasedTechStore.Application.DTOs.Identity;
 
-namespace BasedTechStore.Infrastructure.Identity.Services
+namespace BasedTechStore.Infrastructure.Services.Identity
 {
     public class AuthService : IAuthService
     {
@@ -35,18 +35,19 @@ namespace BasedTechStore.Infrastructure.Identity.Services
         public async Task<string> GenerateJwtTokenAsync(AppUser user)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
-            var secret = jwtSettings["Secret"];
+            var secret = jwtSettings["SecretKey"];
             var issuer = jwtSettings["Issuer"];
             var audience = jwtSettings["Audience"];
-            var expiresMinutes = Convert.ToDouble(jwtSettings["ExpiresMinutes"]);
+            var expiresMinutes = Convert.ToDouble(jwtSettings["ExpirationMinutes"]);
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Id)
+                new Claim("FullName", user.FullName)
             };
 
             var jwtToken = new JwtSecurityToken(
@@ -80,6 +81,11 @@ namespace BasedTechStore.Infrastructure.Identity.Services
 
             var newToken = await GenerateJwtTokenAsync(user);
             return AuthenticationResponse.CreateSuccess(newToken);
+        }
+
+        public async Task<string> GetJwtExpirationMinutes()
+        {
+            return _configuration["JwtSettings:ExpirationMinutes"];
         }
 
         public async Task<AuthenticationResponse> SignInAsync(SignInRequest signInRequest)

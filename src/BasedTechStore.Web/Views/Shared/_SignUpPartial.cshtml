@@ -1,0 +1,44 @@
+﻿@model BasedTechStore.Application.DTOs.Identity.Request.SignUpRequest
+
+<div class="modal fade" id="regModal" tabindex="-1" aria-labelledby="regModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title align-content-center" id="regModalTitle">Реєстрація</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (ViewData.ModelState["SignUp"]?.Errors?.Count > 0)
+                {
+                    <div class="alert alert-danger">
+                        @foreach (var error in ViewData.ModelState["SignUp"].Errors)
+                        {
+                            <div>@error.ErrorMessage</div>
+                        }
+                    </div>
+                }
+                @using (Html.BeginForm("SignUp", "Auth", FormMethod.Post, new { @class = "form-horizontal" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="FullName" name="FullName" placeholder="Full name" required>
+                        <label for="FullName">ПІБ</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="email" class="form-control" id="Email" name="Email" placeholder="Email" required>
+                        <label for="Email">Email</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="Password" name="Password" placeholder="Password" required>
+                        <label for="Password">Пароль</label>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" name="Close">Закрити</button>
+                        <button type="submit" class="btn btn-primary">Зареєструватися</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

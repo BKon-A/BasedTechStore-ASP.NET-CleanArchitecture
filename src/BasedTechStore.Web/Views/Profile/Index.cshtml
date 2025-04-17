@@ -1,109 +1,52 @@
-﻿@{
-    ViewData["Title"] = "Профіль";
-}
+﻿@using BasedTechStore.Web.ViewModels
+@model UserProfileViewModel
 
-<h1>Профіль</h1>
+<div class="container mt-4">
+    <h2 class="mb-4">Особистий кабінет</h2>
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class=" card-title text-center">Профіль</h5>
+    <ul class="nav nav-tabs" id="profileTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info"
+                    type="button" role="tab" aria-controls="info" aria-selected="true">
+                Загальна інформація
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security"
+                    type="button" role="tab" aria-controls="security" aria-selected="false">
+                Безпека
+            </button>
+        </li>
+        @if (User.IsInRole("Manager"))
+        {
+            <li class="nav-item" role="presentation">
+                <a href="@Url.Action("Index", "AdminPanel")" class="btn btn-outline-primary mt-3">Адмін панель</a>
+            </li>
+        }
+    </ul>
 
-                    <div class="d-flex justify-content-center">
-                        <img src="~/images/user.png" class="img-fluid" alt="User Image" />
+    <div class="tab-content mt-3" id="profileTabContent">
+        <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+            <dl class="row">
+                <dt class="col-sm-3">ПІБ</dt>
+                <dd class="col-sm-9">@Model.FullName</dd>
 
-                    </div>
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@Model.Email</dd>
 
-                    <div class="d-flex justify-content-center">
-                        <a href="#" class="btn btn-primary">Змінити фото</a>
-
-                    </div>
-
-                    <div class="d-flex justify-content-center">
-                        <a href="#" class="btn btn-primary">Змінити пароль</a>
-
-                    </div>
-
-                    <div class="d-flex justify-content-center">
-                        <a href="#" class="btn btn-primary">Змінити дані</a>
-
-                    </div>
-
-                </div>
-
-            </div>
-
+                <dt class="col-sm-3">Номер телефону</dt>
+                <dd class="col-sm-9">@Model.PhoneNumber</dd>
+            </dl>
         </div>
+        @* @if (User.IsInRole("Manager")) *@
+        @* { *@
+        @*     <div class="tab-pane fade" id="admin-panel" role="tabpanel" aria-labelledby="admin-tab"> *@
+        @*         <partial name="_AdminPanelPartial" /> *@
+        @*     </div> *@
+        @* } *@
 
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class=" card-title
-
-text-center">
-                        Особисті дані
-                    </h5>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control" id="floatingInput" placeholder="Name" />
-                                <label for="floatingInput">ПІБ</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <input type="date" class="form-control" id="floatingDate" placeholder="BirthDate" />
-                                <label for="floatingDate">Дата народження</label>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="email" class="form-control" id="floatingInput" placeholder="Email" />
-                        <label for="floatingInput">Email</label>
-
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="floatingInput" placeholder="Phone" />
-                        <label for="floatingInput">Телефон</label>
-
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="floatingInput" placeholder="Address" />
-                        <label for="floatingInput">Адреса</label>
-
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="floatingInput" placeholder="City" />
-                        <label for="floatingInput">Місто</label>
-
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="floatingInput" placeholder="Country" />
-                        <label for="floatingInput">Країна</label>
-
-                    </div>
-
-                    <div class="d-flex justify-content-center">
-                        <button type="button" class="btn btn-primary">Зберегти</button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
+        <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
+            <p>Функціонал зміни пароля поки не реалізовано.</p>
         </div>
-
     </div>
-
 </div>
-

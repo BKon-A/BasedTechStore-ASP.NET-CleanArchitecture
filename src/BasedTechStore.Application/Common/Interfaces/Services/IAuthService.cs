@@ -17,6 +17,7 @@ namespace BasedTechStore.Application.Common.Interfaces.Services
         Task SignOutAsync();
 
         Task<string> GenerateJwtTokenAsync(AppUser user);
+        Task<string> GetJwtExpirationMinutes();
         Task<AuthenticationResponse> RefreshJwtTokenAsync(string token);
     }
 }
