@@ -26,7 +26,7 @@ namespace BasedTechStore.Web.Controllers
                 SignInRequest = new SignInRequest()
             };
 
-            ViewData["OpenModal"] = "authModal"; // ID твого модального вікна
+            ViewData["OpenModal"] = "authModal";
             return View("~/Views/Home/Index.cshtml", model);
         }
 
@@ -62,7 +62,6 @@ namespace BasedTechStore.Web.Controllers
 
             return RedirectToAction("Index", "Profile");
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]

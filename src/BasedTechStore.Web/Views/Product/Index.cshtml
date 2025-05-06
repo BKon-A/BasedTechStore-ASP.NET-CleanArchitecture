@@ -1,24 +1,25 @@
-﻿@using BasedTechStore.Application.DTOs.Product
-@model IEnumerable<ProductDto>
+﻿@using BasedTechStore.Web.ViewModels.Products;
+@model List<ProductItemVM>
+
 @{
-    ViewBag.Title = "Товари";
+    ViewData["Title"] = "Товари";
 }
 
-<h2>@(ViewBag.Category ?? "Усі товари")</h2>
+<h2 class="mb-4">Список товарів</h2>
 
-<div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
     @foreach (var product in Model)
     {
         <div class="col">
-            <div class="card h-100">
-                <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
-                <div class="card-body">
-                    <h5 class="card-title">@product.Name</h5>
-                    <p class="card-text">@product.Description</p>
-                    <p class="card-text fw-bold">@product.Price ₴</p>
-                    <a href="#" class="btn btn-primary">До кошика</a>
+            <a asp-controller="Product" asp-action="Details" asp-route-productid="@product.Id">
+                <div class="card product-card h-100" data-product-id="@product.Id" role="button">
+                    <img src="@product.ImageUrl" class="product-card-image" alt="@product.Name">
+                    <div class="card-body">
+                        <h5 class="card-title">@product.Name</h5>
+                        <p class="card-text">@product.Price.ToString("C")</p>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
     }
 </div>

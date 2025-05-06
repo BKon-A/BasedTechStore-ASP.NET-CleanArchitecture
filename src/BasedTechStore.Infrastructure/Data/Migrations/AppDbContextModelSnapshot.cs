@@ -17,10 +17,45 @@ namespace BasedTechStore.Infrastructure.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.2")
+                .HasAnnotation("ProductVersion", "9.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Categories.Category", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Categories.SubCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("SubCategories");
+                });
 
             modelBuilder.Entity("BasedTechStore.Domain.Entities.Identity.AppUser", b =>
                 {
@@ -91,7 +126,7 @@ namespace BasedTechStore.Infrastructure.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Identity.AppUserRole", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -116,6 +151,169 @@ namespace BasedTechStore.Infrastructure.Data.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Orders.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Orders.OrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("OrderItems");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Products.Product", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Brand")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("SubCategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubCategoryId");
+
+                    b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Specifications.ProductSpecification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SpecificationTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("SpecificationTypeId");
+
+                    b.ToTable("ProductSpecifications");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Specifications.SpecificationCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ProductCategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductCategoryId");
+
+                    b.ToTable("SpecificationCategories");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Specifications.SpecificationType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("SpecificationCategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("isFilterable")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SpecificationCategoryId");
+
+                    b.ToTable("SpecificationTypes");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -224,9 +422,102 @@ namespace BasedTechStore.Infrastructure.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Categories.SubCategory", b =>
+                {
+                    b.HasOne("BasedTechStore.Domain.Entities.Categories.Category", "Category")
+                        .WithMany("SubCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Orders.Order", b =>
+                {
+                    b.HasOne("BasedTechStore.Domain.Entities.Identity.AppUser", "User")
+                        .WithMany("Orders")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Orders.OrderItem", b =>
+                {
+                    b.HasOne("BasedTechStore.Domain.Entities.Orders.Order", "Order")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BasedTechStore.Domain.Entities.Products.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Products.Product", b =>
+                {
+                    b.HasOne("BasedTechStore.Domain.Entities.Categories.SubCategory", "SubCategory")
+                        .WithMany("Products")
+                        .HasForeignKey("SubCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SubCategory");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Specifications.ProductSpecification", b =>
+                {
+                    b.HasOne("BasedTechStore.Domain.Entities.Products.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BasedTechStore.Domain.Entities.Specifications.SpecificationType", "SpecificationType")
+                        .WithMany("ProductSpecifications")
+                        .HasForeignKey("SpecificationTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("SpecificationType");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Specifications.SpecificationCategory", b =>
+                {
+                    b.HasOne("BasedTechStore.Domain.Entities.Categories.Category", "ProductCategory")
+                        .WithMany()
+                        .HasForeignKey("ProductCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProductCategory");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Specifications.SpecificationType", b =>
+                {
+                    b.HasOne("BasedTechStore.Domain.Entities.Specifications.SpecificationCategory", "SpecificationCategory")
+                        .WithMany("SpecificationTypes")
+                        .HasForeignKey("SpecificationCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SpecificationCategory");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("BasedTechStore.Domain.Entities.Identity.AppUserRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -253,7 +544,7 @@ namespace BasedTechStore.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("BasedTechStore.Domain.Entities.Identity.AppUserRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -273,6 +564,36 @@ namespace BasedTechStore.Infrastructure.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Categories.Category", b =>
+                {
+                    b.Navigation("SubCategories");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Categories.SubCategory", b =>
+                {
+                    b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Identity.AppUser", b =>
+                {
+                    b.Navigation("Orders");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Orders.Order", b =>
+                {
+                    b.Navigation("OrderItems");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Specifications.SpecificationCategory", b =>
+                {
+                    b.Navigation("SpecificationTypes");
+                });
+
+            modelBuilder.Entity("BasedTechStore.Domain.Entities.Specifications.SpecificationType", b =>
+                {
+                    b.Navigation("ProductSpecifications");
                 });
 #pragma warning restore 612, 618
         }

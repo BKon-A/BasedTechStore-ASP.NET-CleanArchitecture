@@ -1,0 +1,29 @@
+﻿@using BasedTechStore.Web.ViewModels.Categories
+@model List<CategoryItemVM>
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-three-dots-vertical"></i> Категорії
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
+        @foreach (var category in Model)
+        {
+            <li class="dropdown-submenu">
+                <a class="dropdown-item dropdown-toggle" asp-controller="Product" asp-action="Index">
+                    @category.Name
+                </a>
+                @if (category.SubCategories?.Any() == true)
+                {
+                    <ul class="dropdown-menu">
+                        @foreach (var sub in category.SubCategories)
+                        {
+                            <li>
+                                <a class="dropdown-item" asp-controller="Product" asp-action="Index" asp-route-subcategoryid="@sub.Id">@sub.Name</a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </li>
+        }
+    </ul>
+</li>

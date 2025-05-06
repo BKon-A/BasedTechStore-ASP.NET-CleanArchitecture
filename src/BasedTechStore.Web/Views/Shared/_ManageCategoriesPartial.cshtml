@@ -1,0 +1,104 @@
+﻿@using BasedTechStore.Web.ViewModels.Categories
+@model ManageCategoriesVM
+
+<form asp-action="SaveCategories" asp-controller="AdminPanel" method="post" id="saveCategoriesForm">
+    @Html.AntiForgeryToken()
+    <h4>Управління категоріями</h4>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <button type="button" class="btn btn-success btn-sm me-2" id="addCategoryBtn" title="Додати категорію">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+            <button type="button" class="btn btn-danger btn-sm d-none" id="deleteSelectedCategoriesBtn" title="Видалити обране">
+                <i class="bi bi-trash"></i>
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="saveCategoriesButton" title="Зберегти зміни">
+                <i class="bi bi-save"></i>
+            </button>
+        </div>
+    </div>
+
+    <table class="table table-bordered" id="categoriesTable">
+        <thead>
+            <tr>
+                <th style="width: 40px;"><input type="checkbox" id="selectAllCategoriesCheckbox" /></th>
+                <th>Категорія</th>
+                <th>Підкатегорії</th>
+                <th style="width: 70px;">Дії</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Categories.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <input type="checkbox" class="rowCategoriesCheckbox" />
+                    </td>
+                    <td>
+                        <input type="hidden" asp-for="Categories[@i].Id" />
+                        <input class="form-control form-control-sm category-name" asp-for="Categories[@i].Name" readonly />
+                    </td>
+                    <td>
+                        @for (int j = 0; j < Model.Categories[i].SubCategories.Count; j++)
+                        {
+                            <div class="d-flex align-items-center mb-1 subcategory-row">
+                                <input type="hidden" name="Categories[@i].SubCategories[@j].Id" value="@Model.Categories[i].SubCategories[j].Id" />
+                                <input class="form-control form-control-sm me-2 subcategory-name"
+                                       name="Categories[@i].SubCategories[@j].Name"
+                                       value="@Model.Categories[i].SubCategories[j].Name" readonly />
+                                <button type="button" class="btn btn-sm btn-outline-danger removeSubCategoryBtn d-none" title="Видалити підкатегорію">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        }
+
+                        <button type="button" class="btn btn-outline-success btn-sm addSubCategoryBtn mt-1 d-none" data-category-index="@i" title="Додати підкатегорію">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-primary editCategoryBtn" title="Редагувати">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</form>
+
+<!-- Confirm delete modal -->
+<div class="modal fade" id="confirmCategoriesDeleteModal" tabindex="-1" aria-labelledby="confirmCategoriesDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Підтвердження видалення</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+            </div>
+            <div class="modal-body">
+                Ви впевнені, що хочете видалити вибрані категорії? Цю дію не можна скасувати.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Скасувати</button>
+                <button type="button" class="btn btn-danger btn-sm" id="confirmCategoriesDeleteBtn">Видалити</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@await Component.InvokeAsync("InfoModal", new BasedTechStore.Web.ViewModels.Modals.InfoModalViewModel
+{
+    Id = "categoriesWarningOnLeave",
+    Title = "Незбережені зміни",
+    Message = "На сторінці є незбережені зміни категорій. Ви справді хочете покинути сторінку?",
+    SubMessage = "Всі незбережені зміни будуть втрачені.",
+    IsWarning = true,
+    ShowSaveButton = true,
+    ShowConfirmButton = true,
+    ShowCancelButton = true,
+    ConfirmButtonText = "Вийти без збереження",
+    SaveButtonText = "Зберегти та вийти",
+    StaticBackdrop = true,
+    TrackChanges = true,
+    ChangeTrackingFormId = "saveCategoriesForm"
+})

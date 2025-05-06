@@ -55,12 +55,9 @@ builder.Services.AddAuthentication(options =>
     //    options.LogoutPath = "/Auth/SignOut";
     //});
 
-builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+builder.Services.AddLogging();
 
-//builder.Services.AddIdentityCore<AppUser>()
-//   .AddRoles<AppUserRole>()
-//   .AddEntityFrameworkStores<AppDbContext>()
-//   .AddApiEndpoints();
+builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly, typeof(ViewModelMappingProfile).Assembly);
 
 builder.Services.AddIdentity<AppUser, AppUserRole>()
     .AddEntityFrameworkStores<AppDbContext>()
@@ -118,8 +115,6 @@ app.Use(async (context, next) =>
 //    context.Response.Headers["Expires"] = "0";
 //    await next();
 //});
-
-
 
 app.UseRouting();
 

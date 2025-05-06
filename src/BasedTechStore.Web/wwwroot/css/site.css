@@ -45,14 +45,53 @@
 }
 
 @media (max-width: 576px) {
-    dl .row dt, dl.row dd
+    dl.row dt, dl.row dd {
+        display: block;
+        width: 100%;
+    }
 
-{
-    display: block;
-    width: 100%;
+    dl.row dt {
+        margin-top: 1rem;
+        font-weight: bold;
+    }
 }
 
-dl.row dt {
-    margin-top: 1rem;
-    font-weight: bold;
+.carousel-img {
+    max-height: 500px;
+    object-fit: cover;
+}
+
+[data-bs-theme="dark"] carousel-indicators.button, .carousel-caption.bg-opacity {
+    background-color: rgba(0, 0, 0, 0.5); /* дефолт для теми */
+    border-radius: 10px;
+    padding: 1rem;
+    color: #fff;
+}
+
+[data-bs-theme="light"] carousel-indicators.button, .carousel-caption.bg-opacity {
+    background-color: rgba(255, 255, 255, 0.6);
+    color: #000;
+}
+
+.product-card {
+    height: 100%;
+}
+
+.product-card .card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+}
+
+.product-card-image {
+    width: 100% !important; /* Fill the width of its container */
+    height: 200px !important; /* Fixed height for all images */
+    object-fit: contain !important; /* Keep aspect ratio and ensure full image is visible */
+    object-position: center !important; /* Center the image in its container */
+    background-color: #f8f9fa !important; /* Light background to show image boundaries */
+    display: block !important;
 }

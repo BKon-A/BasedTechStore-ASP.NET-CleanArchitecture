@@ -38,5 +38,12 @@
         });
     }
 
+    document.querySelectorAll('.product-card').forEach(card => {
+        card.addEventListener('click', function () {
+            const id = this.getAttribute('data-product-id');
+            window.location.href = `/Product/Details/${id}`;
+        });
+    });
+
     updateThemeIcon();
 });

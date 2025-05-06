@@ -1,47 +1,167 @@
-﻿@using BasedTechStore.Application.DTOs.Product
-@model IEnumerable<ProductDto>
+﻿@using BasedTechStore.Web.ViewModels.Products
+@model ManageProductsVM
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<form asp-action="SaveProducts" asp-controller="AdminPanel" method="post" id="saveProductsForm">
+    @Html.AntiForgeryToken()
     <h4>Управління товарами</h4>
-    <a href="@Url.Action("Create", "Product")" class="btn btn-success" id="btnAddProduct">
-        <i class="bi bi-plus-circle"></i> Додати продукт
-    </a>
+    <div class="d-flex justify-content-between mb-2">
+        <div>
+            <button type="button" id="addProductBtn" class="btn btn-success btn-sm me-1" title="Додати">
+                <i class="bi bi-plus"></i>
+            </button>
+            <button type="button" id="deleteSelectedProductsBtn" class="btn btn-danger btn-sm d-none me-1" title="Видалити">
+                <i class="bi bi-trash"></i>
+            </button>
+            <button type="button" id="saveProductsBtn" class="btn btn-primary btn-sm" title="Зберегти">
+                <i class="bi bi-save"></i>
+            </button>
+        </div>
+    </div>
+
+    <table class="table table-bordered table-sm" id="productsTable">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="selectAllProductsCheckbox" /></th>
+                <th>Назва</th>
+                <th>Категорія</th>
+                <th>Підкатегорія</th>
+                <th>Опис</th>
+                <th>Ціна</th>
+                <th>Бренд</th>
+                <th>Зображення</th>
+                <th>Дії</th>
+            </tr>
+        </thead>
+        <tbody id="productsTableBody">
+            @for (int i = 0; i < Model.Products.Count; i++)
+            {
+                var product = Model.Products[i];
+                <tr>
+                    <td>
+                        <input type="checkbox" class="rowProductsCheckbox" />
+                        <input type="hidden" name="Products[@i].Id" value="@product.Id" />
+                    </td>
+                    <td>
+                        <input name="Products[@i].Name" class="form-control form-control-sm" value="@product.Name" readonly />
+                    </td>
+                    <td>
+                        <input name="Products[@i].CategoryName" class="form-control form-control-sm categoryText" value="@product.CategoryName" readonly />
+                    </td>
+                    <td>
+                        <input type="hidden" name="Products[@i].SubCategoryId" value="@product.SubCategoryId" />
+                        <input name="Products[@i].SubCategoryName" class="form-control form-control-sm subCategoryText" value="@product.SubCategoryName" readonly />
+                    </td>
+                    <td>
+                        <input name="Products[@i].Description" class="form-control form-control-sm" value="@product.Description" readonly />
+                    </td>
+                    <td>
+                        <input name="Products[@i].Price" class="form-control form-control-sm dparse" type="text" step="0.01" inputmode="decimal" value="@product.Price" readonly />
+                    </td>
+                    <td>
+                        <input name="Products[@i].Brand" class="form-control form-control-sm" value="@product.Brand" readonly  />
+                    </td>
+                    <td>
+                        <input name="Products[@i].ImageUrl" class="form-control form-control-sm" value="@product.ImageUrl" readonly />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-primary editProductModalBtn" title="Редагувати">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</form>
+
+<!-- Модальне вікно -->
+<div class="modal fade" data-bs-backdrop="static" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div id="productModalForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productModalLabel">Продукт</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Поля форми -->
+                    <input type="hidden" id="productId" />
+
+                    <div class="col-md-6">
+                        <label class="form-label">Назва</label>
+                        <input type="text" class="form-control" id="productName" required />
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <label class="form-label">Категорія</label>
+                            <select id="productCategorySelect" class="form-select" required>
+                                <option value="">-- Оберіть категорію --</option>
+                                @foreach (var category in Model.Categories)
+                                {
+                                    <option value="@category.Id">@category.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <input type="hidden" id="productSubCategoryId" name="productSubCategoryId" />
+                        <div class="col-md-5">
+                            <label class="form-label">Підкатегорія</label>
+                            <select id="productSubCategorySelect" class="form-select" required>
+                                <option value="">-- Оберіть підкатегорію --</option>
+                                @foreach (var subcategory in Model.SubCategories)
+                                {
+                                    <option value="@subcategory.Id" data-category="@subcategory.CategoryId">@subcategory.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Ціна</label>
+                            <input type="text" inputmode="decimal" class="form-control dparse" id="productPrice" step="0.01" required />
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-12">
+                        <label class="form-label">Опис</label>
+                        <textarea class="form-control" id="productDescription"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Бренд</label>
+                        <input type="text" class="form-control" id="productBrand" />
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <input class="form-control" type="file" id="productImageUrl" name="productImage" accept="image/*" />
+                            <input type="hidden" id="productImageUrlHidden" name="productImageUrlHidden" />
+                            <input type="hidden" id="productImageUrlOriginal" name="productImageUrlOriginal" />
+                            <img id="previewImage" src="#" alt="Preview" class="img-thumbnail mt-2 d-none" style="max-width: 400px;" />
+                            <button type="button" id="removeImageBtn" class="btn btn-sm btn-outline-danger mt-2 d-none">
+                               <i class="bi bi-trash"></i> Видалити зображення
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                    <button id="saveProductBtn" type="button" class="btn btn-primary">Зберегти</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>Назва</th>
-            <th>Опис</th>
-            <th>Ціна</th>
-            <th>Бренд</th>
-            <th>Категорія</th>
-            <th>Підкатегорія</th>
-            <th>Зображення</th>
-            <th>Дії</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var product in Model)
-        {
-            <tr>
-                <td>@product.Name</td>
-                <td>@product.Description</td>
-                <td>@product.Price.ToString("C")</td>
-                <td>@product.Brand</td>
-                <td>@product.CategoryName</td>
-                <td>@product.SubCategoryName</td>
-                <td>
-                    @if (!string.IsNullOrEmpty(product.ImageUrl))
-                    {
-                        <img src="@product.ImageUrl" alt="Зображення" style="max-width: 60px;" />
-                    }
-                </td>
-                <td>
-                    <a href="#" class="btn btn-sm btn-primary me-1"><i class="bi bi-pencil"></i></a>
-                    <a href="#" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+@await Component.InvokeAsync("InfoModal", new BasedTechStore.Web.ViewModels.Modals.InfoModalViewModel
+{
+    Id = "warningOnLeave",
+    Title = "Незбережені зміни",
+    Message = "На сторінці є незбережені зміни. Ви справді хочете покинути сторінку?",
+    SubMessage = "Всі незбережені зміни будуть втрачені.",
+    IsWarning = true,
+    ShowSaveButton = true,
+    ShowConfirmButton = true,
+    ShowCancelButton = true,
+    ConfirmButtonText = "Вийти без збереження",
+    SaveButtonText = "Зберегти та вийти",
+    StaticBackdrop = true,
+    TrackChanges = true,
+    ChangeTrackingFormId = "saveProductsForm"
+})

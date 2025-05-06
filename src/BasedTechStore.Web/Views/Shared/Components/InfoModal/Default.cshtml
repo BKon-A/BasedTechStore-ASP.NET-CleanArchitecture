@@ -1,0 +1,103 @@
+﻿@model BasedTechStore.Web.ViewModels.Modals.InfoModalViewModel
+
+@{
+    var modalSizeClass = Model.Size switch
+    {
+        BasedTechStore.Web.ViewModels.Modals.ModalSize.Small => "modal-sm",
+        BasedTechStore.Web.ViewModels.Modals.ModalSize.Large => "modal-lg",
+        BasedTechStore.Web.ViewModels.Modals.ModalSize.ExtraLarge => "modal-xl",
+        BasedTechStore.Web.ViewModels.Modals.ModalSize.Fullscreen => "modal-fullscreen",
+        _ => ""
+    };
+
+    var backdropAttr = Model.StaticBackdrop ? "data-bs-backdrop=\"static\"" : "";
+    var typeClass = Model.GetTypeClass();
+}
+
+<div class="modal fade @Model.CustomCssClass" id="@Model.Id" tabindex="-1" aria-labelledby="@(Model.Id)Label"
+     aria-hidden="true" @Html.Raw(backdropAttr) data-track-changes="@Model.TrackChanges.ToString().ToLower()">
+    <div class="modal-dialog modal-dialog-centered @modalSizeClass">
+        <div class="modal-content @typeClass">
+            <div class="modal-header">
+                @if (Model.IsWarning)
+                {
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                }
+                else if (Model.IsDanger)
+                {
+                    <i class="bi bi-exclamation-circle-fill text-danger me-2"></i>
+                }
+                else if (Model.IsSuccess)
+                {
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                }
+                else if (Model.IsInfo)
+                {
+                    <i class="bi bi-info-circle-fill text-info me-2"></i>
+                }
+                <h5 class="modal-title" id="@(Model.Id)Label">@Model.Title</h5>
+                @if (Model.ShowCloseButton)
+                {
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+                }
+            </div>
+            <div class="modal-body">
+                <p>@Model.Message</p>
+                @if (!string.IsNullOrEmpty(Model.SubMessage))
+                {
+                    <p class="text-muted small">@Model.SubMessage</p>
+                }
+
+                @* Можна додати додаткові дані з CustomData, якщо потрібно *@
+                @foreach (var item in Model.CustomData)
+                {
+                    <input type="hidden" class="modal-custom-data" data-key="@item.Key" value="@item.Value" />
+                }
+
+                @if (!string.IsNullOrEmpty(Model.RedirectUrl))
+                {
+                    <input type="hidden" id="@(Model.Id)_redirectUrl" value="@Model.RedirectUrl" />
+                }
+
+                @if (!string.IsNullOrEmpty(Model.ChangeTrackingFormId))
+                {
+                    <input type="hidden" id="@(Model.Id)_trackingFormId" value="@Model.ChangeTrackingFormId" />
+                }
+            </div>
+            <div class="modal-footer">
+                @if (Model.ShowCancelButton)
+                {
+                    <button type="button" class="btn btn-secondary btn-cancel" data-bs-dismiss="modal">@Model.CancelButtonText</button>
+                }
+
+                @if (Model.ShowConfirmButton)
+                {
+                    var confirmBtnClass = Model.IsDanger ? "btn-danger" : (Model.IsWarning ? "btn-warning" : (Model.IsSuccess ? "btn-success" : "btn-primary"));
+                    <button type="button" class="btn @confirmBtnClass btn-confirm" data-modal-id="@Model.Id">@Model.ConfirmButtonText</button>
+                }
+
+                @if (Model.ShowSaveButton)
+                {
+                    <button type="button" class="btn btn-primary btn-save" data-modal-id="@Model.Id">@Model.SaveButtonText</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("InfoModal initialized with id: @Model.Id");
+
+        // Не додаємо тут прямі обробники, задаємо тільки налаштування та флаги
+        // Вся логіка буде в ModalHandler
+        if (!window.modalSettings) {
+            window.modalSettings = {};
+        }
+
+        window.modalSettings['@Model.Id'] = {
+            saveButtonId: 'saveProductsBtn', // ID кнопки збереження
+            redirectDelay: 1000 // Затримка перед перенаправленням
+        };
+    });
+</script>

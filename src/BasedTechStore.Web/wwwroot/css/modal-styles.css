@@ -1,0 +1,45 @@
+﻿/* Стилі для різних типів модальних вікон */
+.modal-info .modal-header {
+    background-color: var(--bs-info-bg-subtle);
+    color: var(--bs-info);
+}
+
+.modal-warning .modal-header {
+    background-color: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning);
+}
+
+.modal-danger .modal-header {
+    background-color: var(--bs-danger-bg-subtle);
+    color: var(--bs-danger);
+}
+
+.modal-success .modal-header {
+    background-color: var(--bs-success-bg-subtle);
+    color: var(--bs-success);
+}
+
+/* Анімація для привертання уваги */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(var(--bs-primary-rgb), 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0);
+    }
+}
+
+.modal-pulse {
+    animation: pulse 1.5s infinite;
+}
+
+/* Додаткові стилі для кнопок */
+.modal-footer .btn-confirm,
+.modal-footer .btn-save {
+    min-width: 100px;
+}

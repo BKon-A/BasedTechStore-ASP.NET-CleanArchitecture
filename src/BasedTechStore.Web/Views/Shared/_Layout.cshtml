@@ -7,6 +7,7 @@
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
         <link rel="stylesheet" href="~/css/categories.css" />
+        <link rel="stylesheet" href="~/css/modal-styles.css" />
         <link rel="stylesheet" href="css/site.css" />
 
     </head>
@@ -22,42 +23,38 @@
 
                     <div class="navbar-collapse collapse d-sm-inline-flex">
                         <ul class="navbar-nav flex-grow-1">
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-three-dots-vertical"></i> Категорії
-                                </a>
-                                <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
-                                    <!-- Ноутбуки -->
-                                    <li class="dropdown-submenu">
-                                    <a class="dropdown-item dropdown-toggle" asp-controller="Products" asp-action="Index" asp-route-category="laptops">Ноутбуки</a>
-                                        <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#">Asus</a></li>
-                                            <li><a class="dropdown-item" href="#">Acer</a></li>
-                                            <li><a class="dropdown-item" href="#">HP</a></li>
-                                            <li><a class="dropdown-item" href="#">Інші</a></li>
-                                        </ul>
-                                    </li>
+                            @await Component.InvokeAsync("CategoryMenu")
+                            @* <ul class="dropdown-menu" aria-labelledby="categoriesDropdown"> *@
+                            @*     <!-- Ноутбуки --> *@
+                            @*     <li class="dropdown-submenu"> *@
+                            @*     <a class="dropdown-item dropdown-toggle" asp-controller="Products" asp-action="Index" asp-route-category="laptops">Ноутбуки</a> *@
+                            @*         <ul class="dropdown-menu"> *@
+                            @*             <li><a class="dropdown-item" href="#">Asus</a></li> *@
+                            @*             <li><a class="dropdown-item" href="#">Acer</a></li> *@
+                            @*             <li><a class="dropdown-item" href="#">HP</a></li> *@
+                            @*             <li><a class="dropdown-item" href="#">Інші</a></li> *@
+                            @*         </ul> *@
+                            @*     </li> *@
 
-                                    <!-- Аксесуари -->
-                                    <li class="dropdown-submenu">
-                                        <a class="dropdown-item dropdown-toggle" asp-controller="Products" asp-action="Index" asp-route-category="accessories">Аксесуари</a>
-                                        <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#">Навушники</a></li>
-                                            <li><a class="dropdown-item" href="#">Інше</a></li>
-                                        </ul>
-                                    </li>
+                            @*     <!-- Аксесуари --> *@
+                            @*     <li class="dropdown-submenu"> *@
+                            @*         <a class="dropdown-item dropdown-toggle" asp-controller="Products" asp-action="Index" asp-route-category="accessories">Аксесуари</a> *@
+                            @*         <ul class="dropdown-menu"> *@
+                            @*             <li><a class="dropdown-item" href="#">Навушники</a></li> *@
+                            @*             <li><a class="dropdown-item" href="#">Інше</a></li> *@
+                            @*         </ul> *@
+                            @*     </li> *@
 
-                                    <!-- Комплектуючі -->
-                                    <li class="dropdown-submenu">
-                                        <a class="dropdown-item dropdown-toggle" asp-controller="Products" asp-action="Index" asp-route-category="details">Комплектуючі</a>
-                                        <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#">Оперативна пам’ять</a></li>
-                                            <li><a class="dropdown-item" href="#">SSD</a></li>
-                                            <li><a class="dropdown-item" href="#">Інше</a></li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </li>
+                            @*     <!-- Комплектуючі --> *@
+                            @*     <li class="dropdown-submenu"> *@
+                            @*         <a class="dropdown-item dropdown-toggle" asp-controller="Products" asp-action="Index" asp-route-category="details">Комплектуючі</a> *@
+                            @*         <ul class="dropdown-menu"> *@
+                            @*             <li><a class="dropdown-item" href="#">Оперативна пам’ять</a></li> *@
+                            @*             <li><a class="dropdown-item" href="#">SSD</a></li> *@
+                            @*             <li><a class="dropdown-item" href="#">Інше</a></li> *@
+                            @*         </ul> *@
+                            @*     </li> *@
+                            @* </ul> *@
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> Головна</a>
                             </li>
@@ -128,6 +125,7 @@
         </footer>
         <script src="~/lib/jquery/dist/jquery.min.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/js/modal-handler.js"></script>
         <script src="~/js/site.js"></script>
         @* <script src="~/js/categories.js"></script> *@
         @await RenderSectionAsync("Scripts", required: false)

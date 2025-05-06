@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
+using BasedTechStore.Application.DTOs.Categories;
 using BasedTechStore.Application.DTOs.Identity;
 using BasedTechStore.Application.DTOs.Identity.Request;
 using BasedTechStore.Application.DTOs.Identity.Response;
 using BasedTechStore.Application.DTOs.Product;
+using BasedTechStore.Domain.Entities.Categories;
 using BasedTechStore.Domain.Entities.Identity;
 using BasedTechStore.Domain.Entities.Products;
 
@@ -17,18 +14,18 @@ namespace BasedTechStore.Application.Mapping
     {
         public MappingProfile()
         {
-            // Мапінг для реєстрації
+            // Mapping registration
             CreateMap<SignUpRequest, AppUser>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email));
 
-            // Мапінг для AppUser -> AppUserDto
+            // Mapping AppUser -> AppUserDto
             CreateMap<AppUser, AppUserDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.Parse(src.Id)))
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber));
 
-            // Мапінг для AppUserDto -> UserProfileDto
+            // Mapping AppUserDto -> UserProfileDto
             CreateMap<AppUserDto, UserProfileDto>()
                 .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.PhoneNumber));
                 //.ForMember(dest => dest.BirthDate, opt => opt.Ignore()) // Якщо немає BirthDate у AppUserDto
@@ -36,17 +33,36 @@ namespace BasedTechStore.Application.Mapping
                 //.ForMember(dest => dest.City, opt => opt.Ignore()) // Якщо немає City у AppUserDto
                 //.ForMember(dest => dest.Country, opt => opt.Ignore()); // Якщо немає Country у AppUserDto
 
-            // Мапінг для AuthenticationResponse
+            // Mapping AuthenticationResponse
             CreateMap<AppUser, AuthenticationResponse>()
                 .ForMember(dest => dest.IsSuccess, opt => opt.MapFrom(src => true))
                 .ForMember(dest => dest.Token, opt => opt.Ignore()) // Токен генерується окремо
                 .ForMember(dest => dest.Errors, opt => opt.Ignore());
 
+            // Mapping Product <-> ProductDto
             CreateMap<Product, ProductDto>()
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.SubCategory.Category.Name))
-                .ForMember(dest => dest.SubCategoryName, opt => opt.MapFrom(src => src.SubCategory.Name));
-            CreateMap<ProductDto, Product>()
-                .ForMember(dest => dest.SubCategory, opt => opt.Ignore());
+                .ForMember(dest => dest.SubCategoryName, opt => opt.MapFrom(src => src.SubCategory.Name))
+                .ReverseMap()
+                .ForMember(dest => dest.SubCategory, opt => opt.Ignore()) // бо обробляємо вручну
+                .ForMember(dest => dest.SubCategoryId, opt => opt.Ignore()) // встановлюємо вручну
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            //CreateMap<ProductDto, Product>()
+            //    .ForMember(dest => dest.SubCategory, opt => opt.Ignore());
+
+            // Mapping Category <-> CategoryDto
+            CreateMap<Category, CategoryDto>()
+                .ForMember(dest => dest.SubCategories, opt => opt.MapFrom(src => src.SubCategories));
+            CreateMap<CategoryDto, Category>()
+                .ForMember(dest => dest.SubCategories, opt => opt.Ignore());
+
+            // Mapping SubCategory <-> SubCategoryDto
+            CreateMap<SubCategory, SubCategoryDto>();
+            CreateMap<SubCategoryDto, SubCategory>()
+                .ForMember(dest => dest.Category, opt => opt.Ignore())
+                .ForMember(dest => dest.Products, opt => opt.Ignore());
+
         }
     }
 }
