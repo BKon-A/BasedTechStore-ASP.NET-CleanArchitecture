@@ -11,20 +11,22 @@ namespace BasedTechStore.Application.Common.Interfaces.Services
 {
     public interface IProductService
     {
-        Task<List<string>> GetAllCategoriesAsync();
-        Task<List<string>> GetAllSubCategoriesAsync();
-        Task<List<string>> GetSubCategoriesByCategoryIdAsync(Guid id);
+        Task<List<CategoryDto>> GetAllCategoriesAsync();
         Task<List<CategoryDto>> GetCategoriesWithSubCategoriesAsync();
         Task<List<CategoryDto>> SaveCategoriesAsync(List<CategoryDto> categories);
+        Task<List<SubCategoryDto>> GetAllSubCategoriesAsync();
+        Task<List<SubCategoryDto>> GetSubCategoriesByCategoryIdAsync(Guid categoryId);
+        Task<string?> GetSubCategoryNameByIdAsync(Guid subcategoryId);
 
         Task<List<ProductDto>> GetAllProductsAsync();
         Task<List<ProductDto>> GetProductsBySubCategoryAsync(Guid? id);
-        Task<ProductDto?> GetProductByIdAsync(Guid productId);
+        Task<List<ProductDto>> GetProductsByCategoryIdAsync(Guid id);
         Task<List<ProductDto>> SaveProductsAsync(List<ProductDto> productDtos);
-
-        Task<string?> GetSubCategoryNameByIdAsync(Guid subcategoryId);
+        Task<ProductDto?> GetProductByIdAsync(Guid productId);
+        Task<ProductDetailsDto> GetProductDetailsByProductIdAsync(Guid productId);
 
         Task<string?> UploadProductImageAsync(IFormFile image);
+
         Task<int> DeleteUnusedImagesAsync(List<string> imageUrls);
 
         Task UpdateProductAsync(ProductDto productDto);

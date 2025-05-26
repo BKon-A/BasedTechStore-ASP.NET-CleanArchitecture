@@ -1,87 +1,63 @@
-﻿let warningModal = null; // Global variable for the warning modal
-window.isRedirectingUser = false;
+﻿window.isRedirectingUser = false;
 
-// Функція для безпечного отримання модального вікна
-function getWarningModal() {
-    if (warningModal !== null) return warningModal;
+function showUnsavedChangesWarning(redirectUrl) {
+    if (!window.createInfoModal) {
+        console.error('createInfoModal function is not defined. Ensure that the modal library is loaded.');
 
-    // Спробуємо отримати з глобального об'єкта
-    warningModal = window.modalHandlers ? window.modalHandlers["warningOnLeave"] : null;
+        window.location.href = redirectUrl;
+        return;
 
-    // Якщо модальне вікно знайдено, налаштуємо його
-    if (warningModal) {
-        setupWarningModal(warningModal);
-    } else {
-        console.warn("Warning modal not found in window.modalHandlers");
-    }
+        window.createInfoModal({
+            id: 'unsavedChangesModal',
+            title: 'Незбережені зміни',
+            message: 'На сторінці є незбережені зміни. Що ви хочете зробити?',
+            type: 'warning',
+            showCancelButton: true,
+            showConfirmButton: true,
+            showSaveButton: true,
+            cancelText: 'Скасувати',
+            confirmText: 'Вийти без збереження',
+            saveText: 'Зберегти та вийти',
+            backdrop: true,
+            closeButton: false,
+            autoClose: true,
+            onCancel: function () {
+                console.log("User cancelled navigation");
+            },
+            onConfirm: function () {
+                console.log("User chose to leave without saving, redirecting to:", redirectUrl);
 
-    return warningModal;
-}
-
-// Функція для налаштування модального вікна
-function setupWarningModal(modal) {
-    console.log("Setting up warning modal");
-
-    // Налаштування кнопки "Вийти без збереження"
-    modal.onConfirm = function () {
-        console.log("Confirm clicked, redirecting to:", modal.redirectUrl);
-        // Важливо скинути прапорець змін перед перенаправленням
-        modal.hasChanges = false;
-        window.isRedirectingUser = true; // Встановлюємо прапорець, щоб уникнути повторного виклику beforeunload
-        window.location.href = modal.redirectUrl;
-    };
-
-    // Налаштування кнопки "Зберегти та вийти"
-    modal.onSave = function () {
-        console.log("Save clicked, saving products and redirecting to:", modal.redirectUrl);
-        // Скидаємо прапорець змін перед перенаправленням
-        modal.hasChanges = false;
-        window.isRedirectingUser = true;
-        const saveBtn = document.getElementById('saveProductsBtn');
-
-        if (saveBtn) {
-            // Зберігаємо URL для перенаправлення
-            const redirectUrl = modal.redirectUrl;
-
-            // Клікаємо кнопку збереження
-            saveBtn.click();
-
-            // Перенаправляємо після збереження
-            setTimeout(() => {
+                window.hasUnsavedChanges = false;
+                window.isRedirectingUser = true;
                 window.location.href = redirectUrl;
-            }, 1000);
-        } else {
-            console.error("Save button not found");
-            // Якщо кнопка збереження не знайдена, просто перенаправляємо
-            window.location.href = modal.redirectUrl;
-        }
-    };
+            },
+            onSave: function () {
+                console.log("User chose to save and leave, redirecting to:", redirectUrl);
+
+                // Save and then redirect
+                window.hasUnsavedChanges = false;
+                window.isRedirectingUser = true;
+
+                const saveBtn = document.getElementById('saveProductsBtn');
+                if (saveBtn) {
+                    saveBtn.click();
+
+                    // Redirect after save
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 1000);
+                } else {
+                    console.error("Save button not found");
+
+                    // If save button is not found, just redirect
+                    window.location.href = redirectUrl;
+                }
+            }
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    setTimeout(() => {
-        const modal = getWarningModal();
-        console.log("warningModal after delay:", modal);
-
-        // Налаштування модального вікна
-        if (modal) {
-            modal.onConfirm = function () {
-                modal.hasChanges = false;
-                window.isRedirectingUser = true;
-                window.location.href = modal.redirectUrl;
-            };
-
-            modal.onSave = function () {
-                modal.hasChanges = false;
-                window.isRedirectingUser = true;
-                document.getElementById('saveProductsBtn').click();
-                setTimeout(() => {
-                    window.location.href = modal.redirectUrl;
-                }, 1000);
-            };
-        }
-    }, 500);
-
     const productModal = new bootstrap.Modal(document.getElementById('productModal'));
     const productModalForm = document.getElementById('productModalForm');
 
@@ -103,16 +79,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const subCategorySelect = document.getElementById('productSubCategorySelect');
 
     // ============== WARNING MODAL ==============
-    console.log("warningModal exists:", warningModal !== null && warningModal !== undefined);
-    console.log("warningModal at load:", warningModal);
     console.log("ModalHandlers:", window.modalHandlers);
-    console.log("WarningModal:", window.modalHandlers ? window.modalHandlers["warningOnLeave"] : null);
+    console.log("WarningModal:", window.modalHandlers ? window.modalHandlers["unsavedChangesModal"] : null);
 
     // Tracking changes in the form
     const form = document.getElementById('saveProductsForm');
     if (form) {
         form.addEventListener('input', function () {
-            setHasChanges(true);
+            window.setUnsavedChanges(true);
         });
 
         // Відстеження змін через кнопку додавання
@@ -128,28 +102,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Intercepting clicks on links
     document.addEventListener('click', function (e) {
-        
+
         const link = e.target.closest('a:not([download]):not([target="_blank"])');
         if (!link) return;
 
-        const modal = getWarningModal();
-        if (!modal || !modal.hasChanges) return;
+        if (!window.hasUnsavedChanges) return;
 
         e.preventDefault();
         console.log("Navigation intercepted to:", link.href);
 
-        modal.setRedirectUrl(link.href);
-
-        setupWarningModal(modal);
-
-        modal.show();
+        showUnsavedChangesWarning(link.href);
     });
 
     // Перехоплення закриття вкладки/браузера
     window.addEventListener('beforeunload', function (e) {
-        const modal = getWarningModal();
         const isUserRedirecting = window.isRedirectingUser || false;
-        if (modal && modal.hasChanges && !isUserRedirecting) {
+        if (window.hasUnsavedChanges && !isUserRedirecting) {
             const message = 'На сторінці є незбережені зміни. Ви справді хочете покинути сторінку?';
             e.returnValue = message;
             return message;
@@ -158,39 +126,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Handle browser back and forward buttons
     window.addEventListener('popstate', function (e) {
-        const modal = getWarningModal();
-        if (modal && modal.hasChanges) {
+        if (window.hasUnsavedChanges) {
             // Avoid default behavior
             e.preventDefault();
 
             // Show modal with confirmation
             const targetUrl = document.referrer || '/';
-            modal.setRedirectUrl(targetUrl);
-            modal.show();
+            showUnsavedChangesWarning(targetUrl);
 
             // History restore
             history.pushState(null, '', window.location.href);
-
             return false;
         }
     });
 
     document.getElementById('backToProfileBtn')?.addEventListener('click', function (e) {
-        const modal = getWarningModal();
-        if (modal && modal.hasChanges) {
+        if (window.hasUnsavedChanges) {
             e.preventDefault();
 
             const profileUrl = '@Url.Action("Index", "Profile")';
             console.log("Profile navigation intercepted, redirecting to:", profileUrl);
 
-            modal.setRedirectUrl(profileUrl);
-            setupWarningModal(modal);
-            modal.show();
+            showUnsavedChangesWarning(profileUrl);
         }
     });
+
+    window.setUnsavedChanges = function (hasChanges) {
+        window.hasUnsavedChanges = hasChanges;
+        console.log("hasUnsavedChanges set to:", hasChanges);
+    };
+
+    window.hasUnsavedChanges = false; // Initialize the flag
+    window.showUnsavedChangesWarning = showUnsavedChangesWarning;
     // =============== END WARNING MODAL ===============
 
-    categorySelect.addEventListener('change', function () {
+    categorySelect.addEventListener('change', async function () {
         const selectedCategory = this.value;
 
         let visibleOptions = 0;
@@ -211,6 +181,76 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Reset the subcategory selection if the selected category changes
         subCategorySelect.value = '';
+
+        // Load specifications for this product category
+        if (this.value) {
+            try {
+                const response = await fetch(`/AdminPanel/GetSpecificationTypesByCategory?categoryId=${this.value}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch specifications');
+                }
+
+                const specTypes = await response.json();
+
+                // Find or create specifications container
+                let specsContainer = document.getElementById('productSpecificationsContainer');
+                if (!specsContainer) {
+                    specsContainer = document.createElement('div');
+                    specsContainer.id = 'productSpecificationsContainer';
+                    specsContainer.className = 'mt-3';
+                    document.querySelector('.modal-body').appendChild(specsContainer);
+                }
+
+                // Clear existing fields
+                specsContainer.innerHTML = '';
+
+                if (specTypes && specTypes.length > 0) {
+                    // Group specifications by category
+                    const specsByCategory = {};
+
+                    specTypes.forEach(spec => {
+                        const categoryName = spec.specificationCategoryName;
+                        if (!specsByCategory[categoryName]) {
+                            specsByCategory[categoryName] = [];
+                        }
+                        specsByCategory[categoryName].push(spec);
+                    });
+
+                    // Create fields for each category
+                    for (const [categoryName, specs] of Object.entries(specsByCategory)) {
+                        // Create category header
+                        const categoryTitle = document.createElement('h5');
+                        categoryTitle.className = 'mt-3 mb-2';
+                        categoryTitle.textContent = categoryName;
+                        specsContainer.appendChild(categoryTitle);
+
+                        // Create container for this category's specs
+                        const categoryRow = document.createElement('div');
+                        categoryRow.className = 'row';
+                        specsContainer.appendChild(categoryRow);
+
+                        // Add each specification
+                        specs.forEach(spec => {
+                            const specCol = document.createElement('div');
+                            specCol.className = 'col-md-4 mb-2';
+                            specCol.innerHTML = `
+                            <label class="form-label">${spec.name}${spec.unit ? ` (${spec.unit})` : ''}</label>
+                            <input type="text" 
+                                class="form-control form-control-sm product-spec" 
+                                data-spec-id="${spec.id}"
+                                data-spec-name="${spec.name}"
+                                data-spec-unit="${spec.unit || ''}">
+                        `;
+                            categoryRow.appendChild(specCol);
+                        });
+                    }
+                } else {
+                    specsContainer.innerHTML = '<p class="text-muted">Для цієї категорії не знайдено характеристик.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading specifications:', error);
+            }
+        }
     });
 
     // Modal open the new product
@@ -274,13 +314,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 updateRowFromData(existingRow, formData);
-                setHasChanges(true);
+                window.setUnsavedChanges(true);
             }
         } else {
             const newRow = buildTableRow(formData);
             tableBody.appendChild(newRow);
             reindexProductRows();
-            setHasChanges(true);
+            window.setUnsavedChanges(true);
+        }
+
+        // Save specifications for existing products
+        const productId = document.getElementById('productId').value;
+        if (productId) {
+            const specifications = [];
+            document.querySelectorAll('.product-spec').forEach(input => {
+                if (input.value.trim()) {
+                    specifications.push({
+                        specificationTypeId: input.dataset.specId,
+                        value: input.value.trim()
+                    });
+                }
+            });
+
+            if (specifications.length > 0) {
+                fetch('/AdminPanel/SaveProductSpecifications', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({
+                        productId: productId,
+                        specifications: specifications
+                    })
+                })
+                    .catch(error => console.error('Error saving specifications:', error));
+            }
         }
 
         productModal.hide();
@@ -304,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function () {
     })
 
     // Delete selected products
-    deleteProductBtn.addEventListener('click', function() {
+    deleteProductBtn.addEventListener('click', function () {
         // Замість звичайного confirm
         window.createInfoModal({
             id: 'deleteProductsModal',
@@ -316,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.querySelectorAll('.rowProductsCheckbox:checked').forEach(cb => cb.closest('tr').remove());
                 updateSelectAllCheckboxState();
                 toggleDeleteButton();
-                setHasChanges(true);
+                window.setUnsavedChanges(true);
             }
         });
     });
@@ -358,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert('Products saved successfully!');
 
                     // Flag reset
-                    setHasChanges(false);
+                    window.setUnsavedChanges(false);
 
                     window.tempUploadedImages = [];
 
@@ -368,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         row.dataset.productImageUrlOriginal = imageUrl;
                     })
-                }  
+                }
             })
             .catch(error => {
                 console.error('Error saving products:', error);
@@ -466,7 +535,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             window.tempUploadedImages.push(text);
                         }
 
-                        setHasChanges(true);
+                        window.setUnsavedChanges(true);
                     }
                 })
                 .catch(error => {
@@ -493,9 +562,72 @@ document.addEventListener('DOMContentLoaded', function () {
             removeImageBtn.classList.add('d-none');
 
             // Помічаємо, що були зміни
-            setHasChanges(true);
+            window.setUnsavedChanges(true);
         });
     }
+
+    // ============== Start ProductDetails =============
+
+    //function initProductButtons() {
+
+    //    if (!document.querySelector('.product-actions')) {
+    //        return;
+    //    }
+    //    console.log("ProductDetails: Initializing product buttons");
+    //}
+
+    //function addToCart(productId) {
+    //    console.log("ProductDetails: Adding product to cart:", productId);
+
+    //    showNotification('Товар успішно додано до кошика!', 'success');
+
+    //    animateButton(document.querySelector('.add-to-cart-btn'), 'btn-success', 'btn-primary', 1000);
+    //}
+
+    //// Додавання товару в обрані
+    //function addToWishlist(productId) {
+    //    console.log(`Adding product to wishlist: ${productId}`);
+
+    //    // Тут буде запит до API для додавання товару в обрані
+    //    // Поки що просто показуємо повідомлення
+    //    showNotification('Товар додано в обрані!', 'info');
+
+    //    // Анімація кнопки для візуального фідбеку
+    //    animateButton(document.querySelector('.btn-outline-danger'));
+    //}
+
+    //// Функція для відображення повідомлення
+    //function showNotification(message, type = 'info') {
+    //    // Створюємо елемент повідомлення
+    //    const notification = document.createElement('div');
+    //    notification.className = `alert alert-${type} notification-toast`;
+    //    notification.innerHTML = message;
+
+    //    // Додаємо на сторінку
+    //    document.body.appendChild(notification);
+
+    //    // Показуємо з анімацією
+    //    setTimeout(() => {
+    //        notification.classList.add('show');
+
+    //        // Видаляємо через деякий час
+    //        setTimeout(() => {
+    //            notification.classList.remove('show');
+    //            setTimeout(() => {
+    //                notification.remove();
+    //            }, 300);
+    //        }, 2000);
+    //    }, 100);
+    //}
+
+    //// Анімація кнопки при натисканні
+    //function animateButton(button) {
+    //    button.classList.add('btn-clicked');
+    //    setTimeout(() => {
+    //        button.classList.remove('btn-clicked');
+    //    }, 300);
+    //}
+    // ============== END ProductDetails ===============
 
     // ============== END EVENT LISTENERS ==============
 
@@ -603,8 +735,37 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('Image URL is hiden(Url is empty)');
             }
         }, 100);
-    };                                                                   
-                                                                                                                                                      
+
+        // Load specifications for this product if it has an ID
+        //const productId = row.querySelector('input[name$=".Id"]').value;
+        if (productId) {
+
+            const categoryId = categorySelect.value;
+
+            fetch(`/AdminPanel/GetProductSpecifications?productId=${productId}&categoryId=${categoryId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    // Знаходимо або створюємо контейнер
+                    let specsContainer = document.getElementById('productSpecificationsContainer');
+                    if (!specsContainer) {
+                        specsContainer = document.createElement('div');
+                        specsContainer.id = 'productSpecificationsContainer';
+                        specsContainer.className = 'mt-3';
+                        document.querySelector('.modal-body').appendChild(specsContainer);
+                    }
+
+                    // Вставляємо HTML
+                    specsContainer.innerHTML = html;
+                })
+                .catch(error => console.error('Error loading product specifications:', error));
+        }
+    };
+
     function readModalData() {
         let categoryName = '';
         let categoryId = categorySelect.value;
@@ -624,6 +785,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        // Collect specifications
+        const specifications = [];
+        document.querySelectorAll('.product-spec').forEach(input => {
+            if (input.value.trim()) {
+                specifications.push({
+                    specificationTypeId: input.dataset.specId,
+                    value: input.value.trim()
+                });
+            }
+        });
+
         const result = {
             id: document.getElementById('productId').value,
             name: document.getElementById('productName').value,
@@ -633,7 +805,8 @@ document.addEventListener('DOMContentLoaded', function () {
             description: document.getElementById('productDescription').value,
             price: document.getElementById('productPrice').value,
             brand: document.getElementById('productBrand').value,
-            imageUrl: productImageUrlHidden.value
+            imageUrl: productImageUrlHidden.value,
+            specifications: specifications
         };
 
         console.log('Modal data:', result);
@@ -682,7 +855,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         return row;
     }
-
 
     function toggleDeleteButton() {
         const anyChecked = document.querySelectorAll(".rowProductsCheckbox:checked").length > 0;
@@ -737,18 +909,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
-
-    function setHasChanges(value) {
-        const modal = getWarningModal();
-        if (modal) {
-            console.log(`Setting warningModal.hasChanges to ${value}`);
-            modal.hasChanges = value;
-        } else {
-            console.warn("warningModal is not available, cannot set hasChanges");
-        }
-    }
-
-    function registerAllProductEvents() {
-
-    }
 });
+
+window.onSaveSuccess = function () {
+    // Reset unsaved changes flag
+    window.hasUnsavedChanges(false);
+    console.log("Save successful, unsaved changes flag reset.");
+};

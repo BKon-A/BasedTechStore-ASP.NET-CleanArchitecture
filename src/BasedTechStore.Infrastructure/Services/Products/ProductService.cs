@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using BasedTechStore.Application.Common.Interfaces.Services;
 using BasedTechStore.Application.DTOs.Categories;
 using BasedTechStore.Application.DTOs.Product;
+using BasedTechStore.Application.DTOs.Specifications;
 using BasedTechStore.Domain.Entities.Categories;
 using BasedTechStore.Domain.Entities.Products;
 using BasedTechStore.Infrastructure.Persistence;
@@ -30,6 +31,205 @@ namespace BasedTechStore.Infrastructure.Services.Products
             _logger = logger;
         }
 
+        // ============================= Get Data ==============================
+        public async Task<List<ProductDto>> GetAllProductsAsync()
+        {
+            return await _context.Products
+                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+        }
+
+        public async Task<List<ProductDto>> GetProductsBySubCategoryAsync(Guid? subcategoryId)
+        {
+            if (!subcategoryId.HasValue)
+            {
+                return await GetAllProductsAsync();
+            }
+
+            var query = await _context.Products
+                .Where(p => p.SubCategoryId == subcategoryId)
+                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            if (query == null || !query.Any())
+            {
+                return await GetAllProductsAsync();
+            }
+
+            return query;
+        }
+
+        public async Task<ProductDto?> GetProductByIdAsync(Guid productId)
+        {
+            return await _context.Products
+                .Where(p => p.Id == productId)
+                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId)
+        {
+            var products = await _context.Products
+                .Where(p => p.SubCategory.CategoryId == categoryId)
+                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return _mapper.Map<List<ProductDto>>(products);
+        }
+
+        public async Task<ProductDetailsDto?> GetProductDetailsByProductIdAsync(Guid productId)
+        {
+            var product = await _context.Products
+                .AsNoTracking()
+                .Include(p => p.SubCategory)
+                    .ThenInclude(sc => sc.Category)
+                .Include(p => p.ProductSpecifications)
+                    .ThenInclude(ps => ps.SpecificationType)
+                        .ThenInclude(st => st.SpecificationCategory)
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+            {
+                return null;
+            }
+
+            var productDto = _mapper.Map<ProductDetailsDto>(product);
+
+            var specificationGroups = product.ProductSpecifications
+                .GroupBy(ps => new
+                {
+                    CategoryId = ps.SpecificationType.SpecificationCategoryId,
+                    CategoryName = ps.SpecificationType.SpecificationCategory.Name,
+                    DisplayOrder = ps.SpecificationType.SpecificationCategory.DisplayOrder
+                })
+                .Select(g => new SpecificationCategoryGroupDto
+                {
+                    CategoryId = g.Key.CategoryId,
+                    CategoryName = g.Key.CategoryName,
+                    DisplayOrder = g.Key.DisplayOrder,
+                    Specifications = g
+                        .OrderBy(ps => ps.SpecificationType.DisplayOrder)
+                        .Select(ps => _mapper.Map<ProductSpecificationDto>(ps))
+                        .ToList()
+                })
+                .OrderBy(g => g.DisplayOrder)
+                .ToList();
+
+            productDto.SpecificationGroups = specificationGroups;
+
+            return productDto;
+        }
+
+        public async Task<List<CategoryDto>> GetAllCategoriesAsync()
+        {
+            var categories = await _context.Categories
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            return _mapper.Map<List<CategoryDto>>(categories);
+        }
+
+        public async Task<List<SubCategoryDto>> GetAllSubCategoriesAsync()
+        {
+            var subcategories = await _context.SubCategories
+                .Include(sc => sc.Category)
+                .OrderBy(sc => sc.Name)
+                .ToListAsync();
+
+            return _mapper.Map<List<SubCategoryDto>>(subcategories);
+        }
+
+        public async Task<List<SubCategoryDto>> GetSubCategoriesByCategoryIdAsync(Guid categoryId)
+        {
+            var subcategories = await _context.SubCategories
+                .Include(sc => sc.Category)
+                .Where(sc => sc.CategoryId == categoryId)
+                .OrderBy(sc => sc.Name)
+                .ToListAsync();
+
+            return _mapper.Map<List<SubCategoryDto>>(subcategories);
+        }
+
+        public async Task<string?> GetSubCategoryNameByIdAsync(Guid subcategoryId)
+        {
+            return await _context.SubCategories
+                .Where(sc => sc.Id == subcategoryId)
+                .Select(sc => sc.Name)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<CategoryDto>> GetCategoriesWithSubCategoriesAsync()
+        {
+            var categories = await _context.Categories
+                .Include(c => c.SubCategories)
+                .ToListAsync();
+
+            return _mapper.Map<List<CategoryDto>>(categories);
+        }
+        // ============================= End get data ==============================
+
+        // ============================= Start update data =========================
+        public async Task<string?> UploadProductImageAsync(IFormFile image)
+        {
+            if (image == null || image.Length == 0)
+            {
+                return null;
+            }
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var fileName = Path.GetFileNameWithoutExtension(image.FileName);
+            var fileExtension = Path.GetExtension(image.FileName);
+            var uniqueFileName = $"{fileName}_{Guid.NewGuid()}{fileExtension}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            if (File.Exists(filePath))
+            {
+                return $"/uploads/{uniqueFileName}";
+            }
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await image.CopyToAsync(fileStream);
+            }
+
+            return $"/uploads/{uniqueFileName}";
+        }
+
+        public async Task UpdateProductAsync(ProductDto productDto)
+        {
+            var existingProduct = await _context.Products.FirstOrDefaultAsync(p => p.Id == productDto.Id);
+
+            if (existingProduct == null)
+            {
+                throw new InvalidOperationException("Product not found");
+            }
+
+            var subcategory = await _context.SubCategories
+                .Include(sc => sc.Category)
+                .FirstOrDefaultAsync(sc =>
+                    sc.Name == productDto.CategoryName &&
+                    sc.Category.Name == productDto.CategoryName);
+
+            if (subcategory == null)
+            {
+                throw new InvalidOperationException("Subcategory not found");
+            }
+
+            _mapper.Map(productDto, existingProduct);
+            existingProduct.SubCategoryId = subcategory.Id;
+            //existingProduct.UpdatedAt = DateTime.UtcNow;
+
+            _context.Products.Update(existingProduct);
+            await _context.SaveChangesAsync();
+        }
+        // ============================= End update data ==========================
+
+        // ============================= Start save data ==========================
         public async Task<List<ProductDto>> SaveProductsAsync(List<ProductDto> productDtos)
         {
             var updatedProducts = new List<Product>();
@@ -89,158 +289,6 @@ namespace BasedTechStore.Infrastructure.Services.Products
 
             await _context.SaveChangesAsync();
             return _mapper.Map<List<ProductDto>>(updatedProducts);
-        }
-
-        public async Task<string?> UploadProductImageAsync(IFormFile image)
-        {
-            if (image == null || image.Length == 0)
-            {
-                return null;
-            }
-
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            var fileName = Path.GetFileNameWithoutExtension(image.FileName);
-            var fileExtension = Path.GetExtension(image.FileName);
-            var uniqueFileName = $"{fileName}_{Guid.NewGuid()}{fileExtension}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            if (File.Exists(filePath))
-            {
-                return $"/uploads/{uniqueFileName}";
-            }
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await image.CopyToAsync(fileStream);
-            }
-
-            return $"/uploads/{uniqueFileName}";
-        }
-
-        public async Task<int> DeleteUnusedImagesAsync(List<string> imageUrls)
-        {
-            if (imageUrls == null || !imageUrls.Any())
-            {
-                return 0;
-            }
-
-            var deletedCount = 0;
-            string webRootPath = _webHostEnvironment.WebRootPath;
-
-            foreach (var imageUrl in imageUrls)
-            {
-                try
-                {
-                    if (string.IsNullOrEmpty(imageUrl))
-                        continue;
-
-                    if (!imageUrl.StartsWith("/uploads"))
-                        continue;
-
-                    var filePath = Path.Combine(webRootPath, imageUrl.TrimStart('/'));
-                    if (File.Exists(filePath))
-                    {
-                        bool isUsed = await _context.Products.AnyAsync(p => p.ImageUrl == imageUrl);
-
-                        if (!isUsed)
-                        {
-                            File.Delete(filePath);
-                            deletedCount++;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"Error deleting image file: {imageUrl}");
-                }
-            }
-            return deletedCount;
-        }
-
-        public async Task UpdateProductAsync(ProductDto productDto)
-        {
-            var existingProduct = await _context.Products.FirstOrDefaultAsync(p => p.Id == productDto.Id);
-
-            if (existingProduct == null)
-            {
-                throw new InvalidOperationException("Product not found");
-            }
-
-            var subcategory = await _context.SubCategories
-                .Include(sc => sc.Category)
-                .FirstOrDefaultAsync(sc =>
-                    sc.Name == productDto.CategoryName &&
-                    sc.Category.Name == productDto.CategoryName);
-
-            if (subcategory == null)
-            {
-                throw new InvalidOperationException("Subcategory not found");
-            }
-
-            _mapper.Map(productDto, existingProduct);
-            existingProduct.SubCategoryId = subcategory.Id;
-            //existingProduct.UpdatedAt = DateTime.UtcNow;
-
-            _context.Products.Update(existingProduct);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task DeleteProductAsync(Guid productId)
-        {
-            var product = await _context.Products.FindAsync(productId);
-            if (product == null)
-            {
-                throw new InvalidOperationException("Product not found");
-            }
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task<List<string>> GetAllCategoriesAsync()
-        {
-            return await _context.Categories
-                .Select(c => c.Name)
-                .Distinct()
-                .ToListAsync();
-        }
-
-        public async Task<List<string>> GetAllSubCategoriesAsync()
-        {
-            return await _context.SubCategories
-                .Select(sc => sc.Name)
-                .Distinct()
-                .ToListAsync();
-        }
-
-        public async Task<List<string>> GetSubCategoriesByCategoryIdAsync(Guid categoryId)
-        {
-            return await _context.SubCategories
-                .Where(sc => sc.CategoryId == categoryId)
-                .Select(sc => sc.Name)
-                .Distinct()
-                .ToListAsync();
-        }
-
-        public async Task<string?> GetSubCategoryNameByIdAsync(Guid subcategoryId)
-        {
-            return await _context.SubCategories
-                .Where(sc => sc.Id == subcategoryId)
-                .Select(sc => sc.Name)
-                .FirstOrDefaultAsync();
-        }
-
-        public async Task<List<CategoryDto>> GetCategoriesWithSubCategoriesAsync()
-        {
-            var categories = await _context.Categories
-                .Include(c => c.SubCategories)
-                .ToListAsync();
-
-            return _mapper.Map<List<CategoryDto>>(categories);
         }
 
         public async Task<List<CategoryDto>> SaveCategoriesAsync(List<CategoryDto> categoryDtos)
@@ -312,40 +360,59 @@ namespace BasedTechStore.Infrastructure.Services.Products
 
             return _mapper.Map<List<CategoryDto>>(updatedCategories);
         }
+        // ============================= End save data ==============================
 
-        public async Task<List<ProductDto>> GetAllProductsAsync()
+        // ============================= Start delete data ==========================
+        public async Task<int> DeleteUnusedImagesAsync(List<string> imageUrls)
         {
-            return await _context.Products
-                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
-        }
-
-        public async Task<List<ProductDto>> GetProductsBySubCategoryAsync(Guid? subcategoryId)
-        {
-            if (!subcategoryId.HasValue)
+            if (imageUrls == null || !imageUrls.Any())
             {
-                return await GetAllProductsAsync();
+                return 0;
             }
 
-            var query = await _context.Products
-                .Where(p => p.SubCategoryId == subcategoryId)
-                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+            var deletedCount = 0;
+            string webRootPath = _webHostEnvironment.WebRootPath;
 
-            if (query == null || !query.Any())
+            foreach (var imageUrl in imageUrls)
             {
-                return await GetAllProductsAsync();
+                try
+                {
+                    if (string.IsNullOrEmpty(imageUrl))
+                        continue;
+
+                    if (!imageUrl.StartsWith("/uploads"))
+                        continue;
+
+                    var filePath = Path.Combine(webRootPath, imageUrl.TrimStart('/'));
+                    if (File.Exists(filePath))
+                    {
+                        bool isUsed = await _context.Products.AnyAsync(p => p.ImageUrl == imageUrl);
+
+                        if (!isUsed)
+                        {
+                            File.Delete(filePath);
+                            deletedCount++;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error deleting image file: {imageUrl}");
+                }
             }
-
-            return query;
+            return deletedCount;
         }
 
-        public async Task<ProductDto?> GetProductByIdAsync(Guid productId)
+        public async Task DeleteProductAsync(Guid productId)
         {
-            return await _context.Products
-                .Where(p => p.Id == productId)
-                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync();
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+            {
+                throw new InvalidOperationException("Product not found");
+            }
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
         }
+        // ============================= End delete data ==============================
     }
 }

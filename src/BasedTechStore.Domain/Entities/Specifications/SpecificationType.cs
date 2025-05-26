@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BasedTechStore.Domain.Entities.Specifications
+﻿namespace BasedTechStore.Domain.Entities.Specifications
 {
     public class SpecificationType
     {
         public Guid Id { get; set; }
         public Guid SpecificationCategoryId { get; set; }
-        public string Name { get; set; }
-        public string Unit { get; set; }
-        public bool isFilterable { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Unit { get; set; } = string.Empty;
+        public bool IsFilterable { get; set; }
         public int DisplayOrder { get; set; }
 
         // Navigation Properties
-        public SpecificationCategory SpecificationCategory { get; set; }
-        public ICollection<ProductSpecification> ProductSpecifications { get; set; }
+        public SpecificationCategory SpecificationCategory { get; set; } = null!;
+        public ICollection<ProductSpecification> ProductSpecifications { get; set; } = new List<ProductSpecification>();
     }
 }

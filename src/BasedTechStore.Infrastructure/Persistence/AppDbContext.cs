@@ -91,7 +91,7 @@ namespace BasedTechStore.Infrastructure.Persistence
             // ProductSpecification -> Product(many-to-one)
             modelBuilder.Entity<ProductSpecification>()
                 .HasOne(ps => ps.Product)
-                .WithMany()
+                .WithMany(p => p.ProductSpecifications)
                 .HasForeignKey(ps => ps.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 

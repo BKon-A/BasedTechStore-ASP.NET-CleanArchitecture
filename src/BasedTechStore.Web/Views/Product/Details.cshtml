@@ -1,4 +1,120 @@
-﻿@page
-@model BasedTechStore.Web.Views.Product.DetailsModel
+﻿@using BasedTechStore.Web.ViewModels.Products;
+@model ProductDetailsVM
+
 @{
+    ViewData["Title"] = Model.Name;
 }
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <div class="product-image">
+                    <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded shadow" />
+                </div>
+            }
+            else
+            {
+                <div class="product-image-placeholder bg-light d-flex align-items-center justify-content-center rounded shadow" style="height: 400px;">
+                    <i class="fas fa-image fa-3x text-muted"></i>
+                </div>
+            }
+        </div>
+
+        <div class="col-md-6">
+            <div class="product-info">
+                <h1 class="product-title">@Model.Name</h1>
+
+                @if (!string.IsNullOrEmpty(Model.Brand))
+                {
+                    <p class="product-brand">
+                        <span class="badge bg-secondary">@Model.Brand</span>
+                    </p>
+                }
+
+                <div class="product-price mb-3">
+                    <span class="h2 text-success">@Model.Price.ToString("C")</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div class="product-description mb-4">
+                        <h5>Опис</h5>
+                        <p>@Model.Description</p>
+                    </div>
+                }
+
+                <div class="product-actions">
+                    <button type="button" class="btn btn-primary btn-lg me-2" onclick="addToCart('@Model.Id')">
+                        <i class="fas fa-shopping-cart"></i> Додати в кошик
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="addToWishlist('@Model.Id')">
+                        <i class="fas fa-heart"></i> До обраного
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Секція характеристик *@
+    @if (Model.SpecificationGroups != null && Model.SpecificationGroups.Any())
+    {
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3 class="mb-4">Характеристики</h3>
+
+                @foreach (var categoryGroup in Model.SpecificationGroups.OrderBy(g => g.DisplayOrder))
+                {
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list-ul me-2"></i>
+                                @categoryGroup.CategoryName
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (categoryGroup.Specifications != null && categoryGroup.Specifications.Any())
+                            {
+                                <div class="row">
+                                    @foreach (var spec in categoryGroup.Specifications.OrderBy(s => s.DisplayOrder))
+                                    {
+                                        <div class="col-md-6 col-lg-4 mb-3">
+                                            <div class="specification-item p-2 border rounded bg-light">
+                                                <div class="spec-name fw-bold text-muted small">
+                                                    @spec.TypeName
+                                                </div>
+                                                <div class="spec-value">
+                                                    @spec.Value
+                                                    @if (!string.IsNullOrEmpty(spec.TypeUnit))
+                                                    {
+                                                        <span class="text-muted">@spec.TypeUnit</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted mb-0">Специфікації для цієї категорії відсутні</p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Характеристики для цього товару не вказані.
+                </div>
+            </div>
+        </div>
+    }
+</div>

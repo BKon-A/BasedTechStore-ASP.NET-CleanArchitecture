@@ -1,14 +1,4 @@
 ﻿document.addEventListener("DOMContentLoaded", function () {
-    // Modal open trigger (реєстрація/вхід)
-    //var openModal = "@(ViewData["OpenModal"] ?? "")";
-    //if (openModal === "authModal") {
-    //    var modal = new bootstrap.Modal(document.getElementById('authModal'));
-    //    modal.show();
-    //} else if (openModal === "regModal") {
-    //    var modal = new bootstrap.Modal(document.getElementById('regModal'));
-    //    modal.show();
-    //}
-
     // Theme switch
     const modeSwitch = document.getElementById('btnDisplayModeSwitch');
     const lightIcon = document.getElementById('light-icon');
@@ -37,13 +27,6 @@
             updateThemeIcon();
         });
     }
-
-    document.querySelectorAll('.product-card').forEach(card => {
-        card.addEventListener('click', function () {
-            const id = this.getAttribute('data-product-id');
-            window.location.href = `/Product/Details/${id}`;
-        });
-    });
 
     updateThemeIcon();
 });

@@ -1,9 +1,5 @@
 ﻿using BasedTechStore.Application.DTOs.Specifications;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace BasedTechStore.Application.Common.Interfaces.Services
 {
@@ -18,7 +14,7 @@ namespace BasedTechStore.Application.Common.Interfaces.Services
 
         // Specification types
         Task<List<SpecificationTypeDto>> GetSpecificationTypesByCategoryIdAsync(Guid categoryId);
-        Task<List<SpecificationTypeDto>> GetSpecificationTypeBySpecCategoryIdAsync(Guid specCategoryId);
+        Task<List<SpecificationTypeDto>> GetSpecificationTypesBySpecCategoryIdAsync(Guid specCategoryId);
         Task<SpecificationTypeDto> GetSpecificationTypeAsync(Guid id);
         Task<SpecificationTypeDto> CreateSpecificationTypeAsync(SpecificationTypeDto specificationTypeDto);
         Task<SpecificationTypeDto> UpdateSpecificationTypeAsync(SpecificationTypeDto specificationTypeDto);
@@ -26,6 +22,9 @@ namespace BasedTechStore.Application.Common.Interfaces.Services
 
         // Product specifications
         Task<List<ProductSpecificationDto>> GetProductSpecificationsByProductIdAsync(Guid productId);
-        Task SaveProductSpecificationAsync(Guid productId, List<ProductSpecificationDto> productSpecifications);
+        Task<List<ProductSpecificationDto>> GetAllPossibleProductSpecificationsAsync(Guid productId);
+        Task SaveProductSpecificationsAsync(Guid productId, List<ProductSpecificationDto> productSpecifications);
+        Task SaveAllSpecificationsAsync(List<SpecificationCategoryDto> createdCategories, List<SpecificationCategoryDto> updatedCategories,
+            List<SpecificationCategoryDto> deletedCategories, List<SpecificationTypeDto> createdTypes, List<SpecificationTypeDto> updatedTypes, List<SpecificationTypeDto> deletedTypes);
     }   
 }

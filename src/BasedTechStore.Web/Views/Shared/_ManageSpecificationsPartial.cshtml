@@ -1,0 +1,201 @@
+﻿<!-- BasedTechStore.Web/Views/Shared/_ManageSpecificationsPartial.cshtml -->
+@using BasedTechStore.Web.ViewModels.Specifications
+@model ManageSpecificationsVM
+
+<form asp-action="SaveAllSpecifications" asp-controller="AdminPanel" method="post" id="saveSpecificationsForm">
+    @Html.AntiForgeryToken()
+    <h4>Управління характеристиками товарів</h4>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Категорія товарів</label>
+            <select id="categoryForSpecSelect" class="form-select">
+                <option value="">Оберіть категорію</option>
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="specsManagmentTabs" role="tabList">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="specsCategoriesTab" data-bs-toggle="tab" data-bs-target="#specsCategoriesTabContent" type="button">
+                Управління категоріями характеристик
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="specsProductsTab" data-bs-toggle="tab" data-bs-target="#specsProductsTabContent" type="button">
+                Управління характеристиками продуктів
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="specsTabContent">
+        <div class="tab-pane fade show active" id="specsCategoriesTabContent" role="tabpanel">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Категорії характеристик</h5>
+                            <button type="button" class="btn btn-sm btn-success" id="addSpecCategoryBtn" disabled>
+                                <i class="bi bi-plus-lg"></i> Додати
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm" id="specCategoriesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Назва</th>
+                                        <th style="width: 80px;">Порядок</th>
+                                        <th style="width: 100px;">Дії</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Заповнюється JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Типи характеристик</h5>
+                            <button type="button" class="btn btn-sm btn-success" id="addSpecTypeBtn" disabled>
+                                <i class="bi bi-plus-lg"></i> Додати
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm" id="specTypesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Назва</th>
+                                        <th>Одиниця</th>
+                                        <th style="width: 80px;">Фільтр</th>
+                                        <th style="width: 80px;">Порядок</th>
+                                        <th style="width: 100px;">Дії</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Заповнюється JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <button type="button" class="btn btn-primary" id="saveSpecsBtn">Зберегти зміни</button>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="specsProductsTabContent" role="tabpanel">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Продукт для редагування характеристик</label>
+                    <select id="productForSpecSelect" class="form-select">
+                        <option value="">Оберіть продукт</option>
+                    </select>
+                </div>
+            </div>
+            <div id="productSpecsContainer">
+
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Модальне вікно для категорії характеристик -->
+<div class="modal fade" id="specCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Категорія характеристик</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="UpdateSpecificationCategory" asp-controller="AdminPanel" method="post" id="specCategoryForm">
+                <div class="modal-body">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="specCategoryId" name="Id" value="00000000-0000-0000-0000-000000000000" />
+                    <input type="hidden" id="specCategoryProductId" name="ProductCategoryId" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Назва категорії</label>
+                        <input type="text" class="form-control" id="specCategoryName" name="Name" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Порядок відображення</label>
+                        <input type="number" class="form-control" id="specCategoryOrder" name="DisplayOrder" min="1" value="1" required />
+                        <div class="form-text">Порядковий номер повинен бути унікальним у межах категорії</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                    <button type="submit" class="btn btn-primary" id="saveSpecCategoryBtn">Зберегти</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно для типу характеристики -->
+<div class="modal fade" id="specTypeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Тип характеристики</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="UpdateSpecificationType" asp-controller="AdminPanel" method="post" id="specTypeForm">
+                <div class="modal-body">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="specTypeId" name="Id" />
+                    <input type="hidden" id="specTypeCategoryId" name="SpecificationCategoryId" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Назва характеристики</label>
+                        <input type="text" class="form-control" id="specTypeName" name="Name" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Одиниця виміру (необов'язково)</label>
+                        <input type="text" class="form-control" id="specTypeUnit" name="Unit" placeholder="наприклад: ГБ, МГц, дюйми..." />
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="specTypeFilterable" name="IsFilterable" />
+                        <label class="form-check-label">Використовувати для фільтрації</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Порядок відображення</label>
+                        <input type="number" class="form-control" id="specTypeOrder" name="DisplayOrder" min="1" value="1" required />
+                        <div class="form-text">Порядковий номер повинен бути унікальним у межах категорії характеристик</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                    <button type="submit" class="btn btn-primary" id="saveSpecTypeBtn">Зберегти</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@await Component.InvokeAsync("InfoModal", new BasedTechStore.Web.ViewModels.Modals.InfoModalViewModel
+{
+    Id = "specificationsWarningOnLeave",
+    Title = "Незбережені зміни",
+    Message = "На сторінці є незбережені зміни характеристик. Ви справді хочете покинути сторінку?",
+    SubMessage = "Всі незбережені зміни будуть втрачені.",
+    IsWarning = true,
+    ShowSaveButton = true,
+    ShowConfirmButton = true,
+    ShowCancelButton = true,
+    ConfirmButtonText = "Вийти без збереження",
+    SaveButtonText = "Зберегти та вийти",
+    StaticBackdrop = true,
+    TrackChanges = true,
+    ChangeTrackingFormId = "saveSpecificationsForm"
+})

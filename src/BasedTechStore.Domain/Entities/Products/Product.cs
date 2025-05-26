@@ -1,4 +1,6 @@
 ﻿using BasedTechStore.Domain.Entities.Categories;
+using BasedTechStore.Domain.Entities.Specifications;
+using System.Collections;
 
 namespace BasedTechStore.Domain.Entities.Products
 {
@@ -14,6 +16,8 @@ namespace BasedTechStore.Domain.Entities.Products
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public Guid SubCategoryId { get; set; }
-        public SubCategory SubCategory { get; set; }
+        public SubCategory SubCategory { get; set; } = null!;
+
+        public ICollection<ProductSpecification> ProductSpecifications { get; set; } = new List<ProductSpecification>();
     }
 }

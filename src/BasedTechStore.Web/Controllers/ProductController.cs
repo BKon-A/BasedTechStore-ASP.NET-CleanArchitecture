@@ -2,6 +2,7 @@
 using BasedTechStore.Application.Common.Interfaces.Services;
 using BasedTechStore.Application.DTOs.Product;
 using BasedTechStore.Web.ViewModels.Products;
+using BasedTechStore.Web.ViewModels.Specifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,12 +11,17 @@ namespace BasedTechStore.Web.Controllers
     public class ProductController : BaseController
     {
         private readonly IProductService _productService;
+        private readonly ISpecificationService _specificationService;
+        private readonly ILogger<ProductController> _logger;
         private readonly IMapper _mapper;
 
-        public ProductController(IProductService productService, IMapper mapper)
+        public ProductController(IProductService productService, IMapper mapper,
+            ISpecificationService specificationService, ILogger<ProductController> logger)
         {
             _productService = productService;
             _mapper = mapper;
+            _specificationService = specificationService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -53,12 +59,23 @@ namespace BasedTechStore.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(Guid productId)
         {
-            var product = await _productService.GetProductByIdAsync(productId);
-            if (product == null)
+            try
             {
-                return NotFound("Product not found");
+                var productDetails = await _productService.GetProductDetailsByProductIdAsync(productId);
+                if (productDetails == null)
+                {
+                    return NotFound("Product not found");
+                }
+
+                var vm = _mapper.Map<ProductDetailsVM>(productDetails);
+
+                return View(vm);
             }
-            return View(product);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching product details for productId: {ProductId}", productId);
+                return StatusCode(500, "Internal server error while fetching product details");
+            }
         }
     }
 }

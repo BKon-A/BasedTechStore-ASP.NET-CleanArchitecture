@@ -6,6 +6,7 @@ using BasedTechStore.Infrastructure.Persistence;
 using BasedTechStore.Infrastructure.Persistence.Seed;
 using BasedTechStore.Infrastructure.Services.Identity;
 using BasedTechStore.Infrastructure.Services.Products;
+using BasedTechStore.Infrastructure.Services.Specifications;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -66,6 +67,7 @@ builder.Services.AddIdentity<AppUser, AppUserRole>()
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ISpecificationService, SpecificationService>();
 builder.Services.AddScoped<IManagerSeeder, ManagerSeeder>();
 
 builder.Services.AddDbContext<AppDbContext>(options => 

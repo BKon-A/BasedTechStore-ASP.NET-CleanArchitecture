@@ -1,0 +1,67 @@
+﻿@using BasedTechStore.Web.ViewModels.Specifications;
+@model ProductSpecificationsVM
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Характеристики продукту</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.ProductId == Guid.Empty)
+        {
+            <div class="alert alert-info">
+                Виберіть продукт, для редагування його характеристик.
+            </div>
+        }
+        else if (!Model.SpecificationTypes.Any())
+        {
+            <div class="alert alert-warning">
+                Для вибраного продукту не знайдено жодної характеристики.
+            </div>
+        }
+        else
+        {
+            <div id="productSpecsForm" data-product-id="@Model.ProductId">
+                @Html.AntiForgeryToken()
+
+                @{
+                    var groupedTypes = Model.SpecificationTypes
+                    .GroupBy(t => new { t.SpecificationCategoryId, t.SpecificationCategoryName })
+                    .OrderBy(g => g.First().DisplayOrder)
+                    .ToList();
+                }
+
+                @foreach (var group in groupedTypes)
+                {
+                    <div class="mb-3">
+                        <h6>@group.Key.SpecificationCategoryName</h6>
+                        <hr class="mt-1 mb-2" />
+
+                        <div class="row">
+                            @foreach (var type in group.OrderBy(t => t.DisplayOrder))
+                            {
+                                var existingSpec = Model.ProductSpecifications.FirstOrDefault(ps => ps.SpecificationTypeId == type.Id);
+                                var specValue = existingSpec?.Value ?? string.Empty;
+
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-group">
+                                        <label class="form-label small">@type.Name @(!string.IsNullOrEmpty(type.Unit) 
+                                            ? $"({type.Unit})" : "")</label>
+                                        <input type="text" class="form-control form-control-sm product-spec-input" data-spec-type-id="@type.Id"
+                                               value="@specValue" />
+                                    </div>
+                                    
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="button" class="btn btn-primary btn-sm" id="saveProductSpecsBtn">
+                        <i class="bi bi-save"></i> Зберегти характеристики
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>

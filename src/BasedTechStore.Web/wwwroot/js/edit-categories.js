@@ -167,14 +167,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const form = document.getElementById('saveCategoriesForm');
             const formData = new FormData(form);
-            // const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
-            // formData.append('__RequestVerificationToken', csrfToken);
 
             fetch(form.action, {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest' // Optional, but can be useful for server-side handling'
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
                 .then(response => {

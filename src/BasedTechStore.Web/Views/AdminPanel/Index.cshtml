@@ -8,13 +8,16 @@
         <button class="nav-link active" id="products-tab" data-bs-toggle="tab" data-bs-target="#productsContainer" type="button" role="tab">Товари</button>
     </li>
     <li class="nav-item" role="presentation">
+        <button class="nav-link" id="specs-tab" data-bs-toggle="tab" data-bs-target="#specsContainer" type="button" role="tab">Характеристики</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categoriesContainer" type="button" role="tab">Категорії</button>
+    </li>
+    <li class="nav-item" role="presentation">
         <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab">Замовлення</button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">Користувачі</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categoriesContainer" type="button" role="tab">Категорії</button>
     </li>
 </ul>
 
@@ -22,15 +25,19 @@
     <div class="tab-pane fade show active p-3" id="productsContainer" role="tabpanel">
         @await Html.PartialAsync("_ManageProductsPartial", Model.Products)
     </div>
+    <div class="tab-pane fade p-3" id="categoriesContainer" role="tabpanel">
+        @await Html.PartialAsync("_ManageCategoriesPartial", Model.Categories)
+    </div>
+    <div class="tab-pane fade p-3" id="specsContainer" role="tabpanel">
+        @await Html.PartialAsync("_ManageSpecificationsPartial", Model.Specifications)
+    </div>
     <div class="tab-pane fade p-3" id="orders" role="tabpanel">
         <p>Тут буде управління замовленнями.</p>
     </div>
     <div class="tab-pane fade p-3" id="users" role="tabpanel">
         <p>Тут буде управління користувачами.</p>
     </div>
-    <div class="tab-pane fade p-3" id="categoriesContainer" role="tabpanel">
-        @await Html.PartialAsync("_ManageCategoriesPartial", Model.Categories)
-    </div>
+    
 </div>
 
 <div class="mt-4">
@@ -53,3 +60,4 @@
 </script>
 <script src="~/js/edit-categories.js"></script>
 <script src="~/js/edit-products.js"></script>
+<script src="~/js/edit-specifications.js"></script>

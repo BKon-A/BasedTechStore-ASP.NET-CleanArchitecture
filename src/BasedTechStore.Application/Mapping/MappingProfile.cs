@@ -4,9 +4,11 @@ using BasedTechStore.Application.DTOs.Identity;
 using BasedTechStore.Application.DTOs.Identity.Request;
 using BasedTechStore.Application.DTOs.Identity.Response;
 using BasedTechStore.Application.DTOs.Product;
+using BasedTechStore.Application.DTOs.Specifications;
 using BasedTechStore.Domain.Entities.Categories;
 using BasedTechStore.Domain.Entities.Identity;
 using BasedTechStore.Domain.Entities.Products;
+using BasedTechStore.Domain.Entities.Specifications;
 
 namespace BasedTechStore.Application.Mapping
 {
@@ -48,6 +50,13 @@ namespace BasedTechStore.Application.Mapping
                 .ForMember(dest => dest.SubCategoryId, opt => opt.Ignore()) // встановлюємо вручну
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            // Mapping Product <-> ProductDetailsDto
+            CreateMap<Product, ProductDetailsDto>()
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.SubCategory.CategoryId))
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.SubCategory.Category.Name))
+                .ForMember(dest => dest.SubCategoryName, opt => opt.MapFrom(src => src.SubCategory.Name))
+                .ForMember(dest => dest.SpecificationGroups, opt => opt.Ignore());
             //CreateMap<ProductDto, Product>()
             //    .ForMember(dest => dest.SubCategory, opt => opt.Ignore());
 
@@ -63,6 +72,23 @@ namespace BasedTechStore.Application.Mapping
                 .ForMember(dest => dest.Category, opt => opt.Ignore())
                 .ForMember(dest => dest.Products, opt => opt.Ignore());
 
+            // Mapping SpecificationCategory <-> SpecificationCategoryDto
+            CreateMap<SpecificationCategory, SpecificationCategoryDto>()
+                .ForMember(dest => dest.ProductCategoryName, opt => opt.MapFrom(src => src.ProductCategory.Name));
+            CreateMap<SpecificationCategoryDto, SpecificationCategory>();
+
+            // Mapping SpecificationType <-> SpecificationTypeDto
+            CreateMap<SpecificationType, SpecificationTypeDto>()
+                .ForMember(dest => dest.SpecificationCategoryName, opt => opt.MapFrom(src => src.SpecificationCategory.Name));
+            CreateMap<SpecificationTypeDto, SpecificationType>();
+
+            // Mapping ProductSpecification <-> ProductSpecificationDto
+            CreateMap<ProductSpecification, ProductSpecificationDto>()
+                .ForMember(dest => dest.TypeName, opt => opt.MapFrom(src => src.SpecificationType.Name))
+                .ForMember(dest => dest.TypeUnit, opt => opt.MapFrom(src => src.SpecificationType.Unit))
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.SpecificationType.SpecificationCategory.Name))
+                .ForMember(dest => dest.DisplayOrder, opt => opt.MapFrom(src => src.SpecificationType.DisplayOrder));
+            CreateMap<ProductSpecificationDto, ProductSpecification>();
         }
     }
 }

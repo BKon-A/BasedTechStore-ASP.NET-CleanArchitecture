@@ -11,11 +11,11 @@ namespace BasedTechStore.Domain.Entities.Specifications
     {
         public Guid Id { get; set; }
         public Guid ProductCategoryId { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public int DisplayOrder { get; set; }
 
         // Navigation Properties
-        public Category ProductCategory { get; set; }
-        public ICollection<SpecificationType> SpecificationTypes { get; set; }
+        public Category ProductCategory { get; set; } = null!;
+        public ICollection<SpecificationType> SpecificationTypes { get; set; } = new List<SpecificationType>();
     }
 }
