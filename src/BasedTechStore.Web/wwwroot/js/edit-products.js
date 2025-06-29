@@ -1,4 +1,5 @@
 ﻿window.isRedirectingUser = false;
+window.allCurrentImageUrls = new Set();
 
 function showUnsavedChangesWarning(redirectUrl) {
     if (!window.createInfoModal) {
@@ -77,6 +78,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const categorySelect = document.getElementById('productCategorySelect');
     const subCategorySelect = document.getElementById('productSubCategorySelect');
+
+    window.tempUploadedImages = window.tempUploadedImages || [];
+
+    // Save the original image URL for comparison
+    const allRows = document.querySelectorAll('#productsTable tbody tr');
+    allRows.forEach(row => {
+        const imageUrl = row.querySelector('input[name$=".ImageUrl"]')?.value;
+        if (imageUrl) {
+            window.allCurrentImageUrls.add(imageUrl);
+        }
+    });
+
+    console.log('Поточні зображення в таблиці:', Array.from(window.allCurrentImageUrls));
 
     // ============== WARNING MODAL ==============
     console.log("ModalHandlers:", window.modalHandlers);
@@ -181,76 +195,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Reset the subcategory selection if the selected category changes
         subCategorySelect.value = '';
-
-        // Load specifications for this product category
-        if (this.value) {
-            try {
-                const response = await fetch(`/AdminPanel/GetSpecificationTypesByCategory?categoryId=${this.value}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch specifications');
-                }
-
-                const specTypes = await response.json();
-
-                // Find or create specifications container
-                let specsContainer = document.getElementById('productSpecificationsContainer');
-                if (!specsContainer) {
-                    specsContainer = document.createElement('div');
-                    specsContainer.id = 'productSpecificationsContainer';
-                    specsContainer.className = 'mt-3';
-                    document.querySelector('.modal-body').appendChild(specsContainer);
-                }
-
-                // Clear existing fields
-                specsContainer.innerHTML = '';
-
-                if (specTypes && specTypes.length > 0) {
-                    // Group specifications by category
-                    const specsByCategory = {};
-
-                    specTypes.forEach(spec => {
-                        const categoryName = spec.specificationCategoryName;
-                        if (!specsByCategory[categoryName]) {
-                            specsByCategory[categoryName] = [];
-                        }
-                        specsByCategory[categoryName].push(spec);
-                    });
-
-                    // Create fields for each category
-                    for (const [categoryName, specs] of Object.entries(specsByCategory)) {
-                        // Create category header
-                        const categoryTitle = document.createElement('h5');
-                        categoryTitle.className = 'mt-3 mb-2';
-                        categoryTitle.textContent = categoryName;
-                        specsContainer.appendChild(categoryTitle);
-
-                        // Create container for this category's specs
-                        const categoryRow = document.createElement('div');
-                        categoryRow.className = 'row';
-                        specsContainer.appendChild(categoryRow);
-
-                        // Add each specification
-                        specs.forEach(spec => {
-                            const specCol = document.createElement('div');
-                            specCol.className = 'col-md-4 mb-2';
-                            specCol.innerHTML = `
-                            <label class="form-label">${spec.name}${spec.unit ? ` (${spec.unit})` : ''}</label>
-                            <input type="text" 
-                                class="form-control form-control-sm product-spec" 
-                                data-spec-id="${spec.id}"
-                                data-spec-name="${spec.name}"
-                                data-spec-unit="${spec.unit || ''}">
-                        `;
-                            categoryRow.appendChild(specCol);
-                        });
-                    }
-                } else {
-                    specsContainer.innerHTML = '<p class="text-muted">Для цієї категорії не знайдено характеристик.</p>';
-                }
-            } catch (error) {
-                console.error('Error loading specifications:', error);
-            }
-        }
     });
 
     // Modal open the new product
@@ -323,35 +267,6 @@ document.addEventListener('DOMContentLoaded', function () {
             window.setUnsavedChanges(true);
         }
 
-        // Save specifications for existing products
-        const productId = document.getElementById('productId').value;
-        if (productId) {
-            const specifications = [];
-            document.querySelectorAll('.product-spec').forEach(input => {
-                if (input.value.trim()) {
-                    specifications.push({
-                        specificationTypeId: input.dataset.specId,
-                        value: input.value.trim()
-                    });
-                }
-            });
-
-            if (specifications.length > 0) {
-                fetch('/AdminPanel/SaveProductSpecifications', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify({
-                        productId: productId,
-                        specifications: specifications
-                    })
-                })
-                    .catch(error => console.error('Error saving specifications:', error));
-            }
-        }
-
         productModal.hide();
     });
 
@@ -413,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
             .then(response => {
-                console.log('Response received:', response);
+                //console.log('Response received:', response);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
@@ -429,14 +344,26 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Flag reset
                     window.setUnsavedChanges(false);
 
-                    window.tempUploadedImages = [];
+                    window.allCurrentImageUrls = new Set();
+                    document.querySelectorAll('#productsTable tbody tr').forEach(row => {
+                        const imageUrl = row.querySelector('input[name$=".ImageUrl"]')?.value;
+                        if (imageUrl) {
+                            window.allCurrentImageUrls.add(imageUrl);
+                        }
+                    });
 
-                    tableBody.querySelectorAll('tr').forEach(row => {
-                        const imageUrl = row.querySelector('input[name$=".ImageUrl"]').value;
-                        const productId = row.querySelector('input[name$=".Id"]').value;
+                    if (window.tempUploadedImages.length > 0) {
+                        console.log("Temporary uploaded images:", window.tempUploadedImages);
+                        const imagesToDelete = window.tempUploadedImages.filter(url =>
+                            !window.allCurrentImageUrls.has(url)
+                        );
 
-                        row.dataset.productImageUrlOriginal = imageUrl;
-                    })
+                        if (imagesToDelete.length > 0) {
+                            console.log("Images to delete:", imagesToDelete);
+                            deleteUnusedImages(imagesToDelete);
+                        }
+                    }
+                    window.tempUploadedImages = []; // Clear the temp array after saving
                 }
             })
             .catch(error => {
@@ -447,43 +374,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('productModal').addEventListener('hidden.bs.modal', function (e) {
         if (window.tempUploadedImages && window.tempUploadedImages.length > 0) {
-            const imageUrl = productImageUrlHidden.value;
-            const originalImageUrl = productImageUrlOriginal.value;
-
-            const imagesToDelete = window.tempUploadedImages.filter(url =>
-                url !== imageUrl || imageUrl !== originalImageUrl
-            );
-
-            if (imagesToDelete.length > 0) {
-                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-
-                const formData = FormData();
-
-                imagesToDelete.forEach((url, index) => {
-                    formData.append(`imageUrls[${index}]`, url);
-                });
-
-                formData.append('__RequestVerificationToken', token);
-
-                fetch('/AdminPanel/DeleteUnusedImages', {
-                    method: 'POST',
-                    body: formData
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        response.text()
-                    })
-                    .then(result => {
-                        console.log('Images deleted:', result);
-
-                        window.tempUploadedImages = [];
-                    })
-                    .catch(error => {
-                        console.error('Error deleting images:', error);
-                    });
-            }
+            cleanupUnusedImages(productImageUrlHidden.value, productImageUrlOriginal.value);
         }
     });
 
@@ -523,18 +414,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         alert('Помилка при завантаженні зображення');
                     } else {
                         // if a previous image was uploaded, add it to the tempUploadedImages array
-                        if (productImageUrlHidden && productImageUrlHidden !== productImageUrlOriginal &&
-                            !window.tempUploadedImages.includes(productImageUrlHidden.value)) {
-                            window.tempUploadedImages.push(productImageUrlHidden.value);
+                        if (productImageUrlHidden.value && productImageUrlHidden.value !== productImageUrlOriginal.value) {
+                            trackTempImage(productImageUrlHidden.value);
                         }
 
                         productImageUrlHidden.value = text;
 
-                        // add the new image to the tempUploadedImages array
-                        if (!window.tempUploadedImages.includes(text)) {
-                            window.tempUploadedImages.push(text);
-                        }
-
+                        // add the new image to the tempUploadedImages array 
+                        trackTempImage(text);
                         window.setUnsavedChanges(true);
                     }
                 })
@@ -565,69 +452,6 @@ document.addEventListener('DOMContentLoaded', function () {
             window.setUnsavedChanges(true);
         });
     }
-
-    // ============== Start ProductDetails =============
-
-    //function initProductButtons() {
-
-    //    if (!document.querySelector('.product-actions')) {
-    //        return;
-    //    }
-    //    console.log("ProductDetails: Initializing product buttons");
-    //}
-
-    //function addToCart(productId) {
-    //    console.log("ProductDetails: Adding product to cart:", productId);
-
-    //    showNotification('Товар успішно додано до кошика!', 'success');
-
-    //    animateButton(document.querySelector('.add-to-cart-btn'), 'btn-success', 'btn-primary', 1000);
-    //}
-
-    //// Додавання товару в обрані
-    //function addToWishlist(productId) {
-    //    console.log(`Adding product to wishlist: ${productId}`);
-
-    //    // Тут буде запит до API для додавання товару в обрані
-    //    // Поки що просто показуємо повідомлення
-    //    showNotification('Товар додано в обрані!', 'info');
-
-    //    // Анімація кнопки для візуального фідбеку
-    //    animateButton(document.querySelector('.btn-outline-danger'));
-    //}
-
-    //// Функція для відображення повідомлення
-    //function showNotification(message, type = 'info') {
-    //    // Створюємо елемент повідомлення
-    //    const notification = document.createElement('div');
-    //    notification.className = `alert alert-${type} notification-toast`;
-    //    notification.innerHTML = message;
-
-    //    // Додаємо на сторінку
-    //    document.body.appendChild(notification);
-
-    //    // Показуємо з анімацією
-    //    setTimeout(() => {
-    //        notification.classList.add('show');
-
-    //        // Видаляємо через деякий час
-    //        setTimeout(() => {
-    //            notification.classList.remove('show');
-    //            setTimeout(() => {
-    //                notification.remove();
-    //            }, 300);
-    //        }, 2000);
-    //    }, 100);
-    //}
-
-    //// Анімація кнопки при натисканні
-    //function animateButton(button) {
-    //    button.classList.add('btn-clicked');
-    //    setTimeout(() => {
-    //        button.classList.remove('btn-clicked');
-    //    }, 300);
-    //}
-    // ============== END ProductDetails ===============
 
     // ============== END EVENT LISTENERS ==============
 
@@ -735,35 +559,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('Image URL is hiden(Url is empty)');
             }
         }, 100);
-
-        // Load specifications for this product if it has an ID
-        //const productId = row.querySelector('input[name$=".Id"]').value;
-        if (productId) {
-
-            const categoryId = categorySelect.value;
-
-            fetch(`/AdminPanel/GetProductSpecifications?productId=${productId}&categoryId=${categoryId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.text();
-                })
-                .then(html => {
-                    // Знаходимо або створюємо контейнер
-                    let specsContainer = document.getElementById('productSpecificationsContainer');
-                    if (!specsContainer) {
-                        specsContainer = document.createElement('div');
-                        specsContainer.id = 'productSpecificationsContainer';
-                        specsContainer.className = 'mt-3';
-                        document.querySelector('.modal-body').appendChild(specsContainer);
-                    }
-
-                    // Вставляємо HTML
-                    specsContainer.innerHTML = html;
-                })
-                .catch(error => console.error('Error loading product specifications:', error));
-        }
     };
 
     function readModalData() {
@@ -785,17 +580,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // Collect specifications
-        const specifications = [];
-        document.querySelectorAll('.product-spec').forEach(input => {
-            if (input.value.trim()) {
-                specifications.push({
-                    specificationTypeId: input.dataset.specId,
-                    value: input.value.trim()
-                });
-            }
-        });
-
         const result = {
             id: document.getElementById('productId').value,
             name: document.getElementById('productName').value,
@@ -805,8 +589,7 @@ document.addEventListener('DOMContentLoaded', function () {
             description: document.getElementById('productDescription').value,
             price: document.getElementById('productPrice').value,
             brand: document.getElementById('productBrand').value,
-            imageUrl: productImageUrlHidden.value,
-            specifications: specifications
+            imageUrl: productImageUrlHidden.value
         };
 
         console.log('Modal data:', result);
@@ -909,6 +692,75 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
+
+    // ============= Start Image functions ==============
+    function trackTempImage(imageUrl) {
+        if (!imageUrl) return;
+
+        if (!window.allCurrentImageUrls.has(imageUrl)) {
+            console.log("Adding image to tempUploadedImages:", imageUrl);
+            if (!window.tempUploadedImages.includes(imageUrl)) {
+                window.tempUploadedImages.push(imageUrl);
+                console.log("Image added to tempUploadedImages:", imageUrl);
+            }
+        } else {
+            console.log("Image already exists in allCurrentImageUrls, not adding:", imageUrl);
+        }
+    }
+    function removeImageFromTracking(imageUrl) {
+        const index = window.tempUploadedImages.indexOf(imageUrl);
+        if (index > -1) {
+            window.tempUploadedImages.splice(index, 1);
+            console.log("Removed image from tempUploadedImages:", imageUrl);
+        }
+    }
+    function cleanupUnusedImages(currentImageUrl, originalImageUrl) {
+        const imagesToDelete = window.tempUploadedImages.filter(url =>
+            url !== currentImageUrl && url !== originalImageUrl
+        );
+
+        if (imagesToDelete.length > 0) {
+            console.log("Cleanup unused images:", imagesToDelete);
+            deleteUnusedImages(imagesToDelete);
+
+            imagesToDelete.forEach(url => removeImageFromTracking(url));
+        }
+    }
+    function deleteUnusedImages(imageUrls) {
+        if (!imageUrls || !imageUrls.length) return;
+
+        console.log("Deleting unused images:", imageUrls);
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const formData = new FormData();
+
+        imageUrls.forEach((url, index) => {
+            formData.append(`imageUrls[${index}]`, url);
+        });
+
+        formData.append('__RequestVerificationToken', token);
+
+        console.log("Count of deleting image urls: ", imageUrls.length);
+
+        fetch('/AdminPanel/DeleteUnusedImages', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(result => {
+                console.log('Images deleted:', result);
+            })
+            .catch(error => {
+                console.error('Error deleting images:', error);
+            });
+    }
+    // ============= End Image functions ==============
 });
 
 window.onSaveSuccess = function () {

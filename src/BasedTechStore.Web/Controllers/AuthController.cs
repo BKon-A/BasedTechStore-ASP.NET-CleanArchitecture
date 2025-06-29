@@ -1,13 +1,14 @@
 ﻿using BasedTechStore.Application.Common.Interfaces.Services;
 using BasedTechStore.Application.DTOs.Identity;
 using BasedTechStore.Application.DTOs.Identity.Request;
+using BasedTechStore.Web.Extentions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BasedTechStore.Web.Controllers
 {
     [AllowAnonymous]
-    public class AuthController : BaseController
+    public class AuthController : Controller
     {
         private readonly IAuthService _authService;
 
@@ -16,71 +17,94 @@ namespace BasedTechStore.Web.Controllers
             _authService = authService;
         }
 
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult SignIn()
-        {
-            var model = new AuthModalViewModel
-            {
-                SignUpRequest = new SignUpRequest(),
-                SignInRequest = new SignInRequest()
-            };
-
-            ViewData["OpenModal"] = "authModal";
-            return View("~/Views/Home/Index.cshtml", model);
-        }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SignIn(SignInRequest signInRequest)
         {
-            if (!ModelState.IsValid)
+            if (Request.IsAjaxRequest())
             {
-                TempData["SignInErrors"] = "Invalid login attempt.";
-                TempData["OpenModal"] = "authModal";
-                return RedirectToAction("Index", "Home");
+                if (!ModelState.IsValid)
+                {
+                    return Json(new { 
+                        success = false, 
+                        errors = ModelState.Values.SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage).ToList() });
+                }
+                try
+                {
+                    var response = await _authService.SignInAsync(signInRequest);
+                    if (!response.IsSuccess)
+                    {
+                        return Json(new { success = false, errors = response.Errors });
+                    }
+
+                    if (!double.TryParse(await _authService.GetJwtExpirationMinutes(), out var expirationMinutes))
+                        expirationMinutes = 60;
+
+                    Response.Cookies.Append("access-token", response.Token, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                        Expires = DateTime.UtcNow.AddMinutes(expirationMinutes),
+                        Path = "/"
+                    });
+
+                    return Json(new { success = true, redirectUrl = Url.Action("Index", "Profile") });
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { success = false, errors = new[] { "An error occurred while signing in. Error: ", ex.Message } });
+                }
+
             }
 
-            var response = await _authService.SignInAsync(signInRequest);
-            if (!response.IsSuccess)
-            {
-                TempData["SignInErrors"] = string.Join(", ", response.Errors);
-                TempData["OpenModal"] = "authModal";
-                return RedirectToAction("Index", "Home");
-            }
-
-            if (!double.TryParse(await _authService.GetJwtExpirationMinutes(), out var expirationMinutes))
-                expirationMinutes = 60;
-
-            Response.Cookies.Append("access-token", response.Token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(expirationMinutes)
-            });
-
-            return RedirectToAction("Index", "Profile");
+            return BadRequest(new { success = false, message = "Invalid request type." });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SignUp(SignUpRequest signUpRequest)
         {
-            if (!ModelState.IsValid)
+            if (Request.IsAjaxRequest())
             {
-                TempData["SignUpErrors"] = "Invalid fields";
-                return RedirectToAction("Index", "Home");
+                if (!ModelState.IsValid)
+                {
+                    return Json(new { 
+                        success = false, 
+                        errors = ModelState.Values.SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage).ToList() });
+                }
+
+                try
+                {
+                    var response = await _authService.SignUpAsync(signUpRequest);
+                    if (!response.IsSuccess)
+                    {
+                        return Json(new { success = false, errors = response.Errors });
+                    }
+
+                    if (!double.TryParse(await _authService.GetJwtExpirationMinutes(), out var expirationMinutes))
+                        expirationMinutes = 60;
+
+                    Response.Cookies.Append("access-token", response.Token, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                        Expires = DateTime.UtcNow.AddMinutes(expirationMinutes),
+                        Path = "/"
+                    });
+
+                    return Json(new { success = true, redirectUrl = Url.Action("Index", "Profile") });
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { success = false, errors = new[] { "An error occurred while signing up. Error: ", ex.Message } });
+                }
             }
 
-            var response = await _authService.SignUpAsync(signUpRequest);
-            if (!response.IsSuccess)
-            {
-                TempData["SignUpErrors"] = string.Join(", ", response.Errors);
-                return RedirectToAction("Index", "Home");
-            }
-
-            return RedirectToAction("Index", "Profile");
+            return BadRequest(new { success = false, message = "Invalid request type." });
         }
 
         [HttpPost]
@@ -98,6 +122,17 @@ namespace BasedTechStore.Web.Controllers
             await _authService.SignOutAsync();
             Response.Cookies.Delete("access-token");
             return RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        public IActionResult CheckAuth()
+        {
+            return Json(new
+            {
+                isAuthenticated = User.Identity.IsAuthenticated,
+                username = User.Identity.Name,
+                claims = User.Claims.Select(c => new { type = c.Type, value = c.Value }).ToList()
+            });
         }
 
         public IActionResult RefreshToken()

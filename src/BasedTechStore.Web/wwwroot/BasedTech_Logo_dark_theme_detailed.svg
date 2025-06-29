@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="85" viewBox="0 0 300 85" fill="none">
+	<defs>
+		<linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+			<stop offset="0%" stop-color="#8A2BE2"/>
+			<stop offset="100%" stop-color="#00BFFF"/>
+		</linearGradient>
+	</defs>
+
+<!-- Іконка (пакет з аксесуарами) -->
+	<rect x="0" y="7.5" width="60" height="70" rx="10" stroke="url(#grad)" stroke-width="2" fill="transparent"/>
+	<path d="M5 7.5 C18 -12.5, 42 -12.5, 55 7.5" stroke="url(#grad)" stroke-width="2" fill="transparent"/>
+	<rect x="12" y="22.5" width="36" height="14" fill="url(#grad)"/>
+	<rect x="14" y="39.5" width="32" height="5" fill="url(#grad)"/>
+	<path d="M18 50.5 Q24 40.5 30 50.5" stroke="url(#grad)" stroke-width="2" fill="transparent"/>
+	<circle cx="18" cy="50.5" r="2" fill="url(#grad)"/>
+	<circle cx="30" cy="50.5" r="2" fill="url(#grad)"/>
+	<ellipse cx="45" cy="54.5" rx="3" ry="5" fill="url(#grad)"/>
+
+	<!-- Текст -->
+	<text x="75" y="57.5" font-family="Verdana, sans-serif" font-size="43" fill="url(#grad)">BasedTech</text>
+</svg>

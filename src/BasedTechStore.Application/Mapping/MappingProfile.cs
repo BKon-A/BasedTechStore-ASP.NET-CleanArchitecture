@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
+using BasedTechStore.Application.DTOs.Cart;
 using BasedTechStore.Application.DTOs.Categories;
 using BasedTechStore.Application.DTOs.Identity;
 using BasedTechStore.Application.DTOs.Identity.Request;
 using BasedTechStore.Application.DTOs.Identity.Response;
 using BasedTechStore.Application.DTOs.Product;
 using BasedTechStore.Application.DTOs.Specifications;
+using BasedTechStore.Domain.Entities.Cart;
 using BasedTechStore.Domain.Entities.Categories;
 using BasedTechStore.Domain.Entities.Identity;
 using BasedTechStore.Domain.Entities.Products;
@@ -89,6 +91,17 @@ namespace BasedTechStore.Application.Mapping
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.SpecificationType.SpecificationCategory.Name))
                 .ForMember(dest => dest.DisplayOrder, opt => opt.MapFrom(src => src.SpecificationType.DisplayOrder));
             CreateMap<ProductSpecificationDto, ProductSpecification>();
+
+            // Mapping Cart <-> CartDto
+            CreateMap<Cart, CartDto>()
+                .ForMember(dest => dest.CartItems, opt => opt.MapFrom(src => src.CartItems));
+
+            // Mapping CartItem <-> CartItemDto
+            CreateMap<CartItem, CartItemDto>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.Name : string.Empty))
+                .ForMember(dest => dest.ProductImageUrl, opt => opt.MapFrom(src => src.Product != null ? src.Product.ImageUrl : string.Empty))
+                .ForMember(dest => dest.ProductBrand, opt => opt.MapFrom(src => src.Product != null ? src.Product.Brand : string.Empty))
+                .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.Price * src.Quantity));
         }
     }
 }

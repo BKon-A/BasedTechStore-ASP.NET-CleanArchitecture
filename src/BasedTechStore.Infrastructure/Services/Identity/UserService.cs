@@ -5,6 +5,7 @@ using BasedTechStore.Application.DTOs.Identity.Response;
 using BasedTechStore.Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 namespace BasedTechStore.Infrastructure.Services.Identity
 {
@@ -22,7 +23,6 @@ namespace BasedTechStore.Infrastructure.Services.Identity
             _roleManager = roleManager;
             _mapper = mapper;
         }
-
         public async Task<AppUserDto> FindByIdAsync(Guid id)
         {
             var user = await _userManager.FindByIdAsync(id.ToString());

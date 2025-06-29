@@ -1,6 +1,8 @@
-﻿namespace BasedTechStore.Web.ViewModels.Specifications
+﻿using BasedTechStore.Web.ViewModels.Specifications;
+
+namespace BasedTechStore.Web.ViewModels.PendingChanges
 {
-    public class PendingChangesVM
+    public class SpecsPendingChangesVM
     {
         public List<SpecificationCategoryVM> CreatedCategories { get; set; } = new List<SpecificationCategoryVM>();
         public List<SpecificationCategoryVM> UpdatedCategories { get; set; } = new List<SpecificationCategoryVM>();

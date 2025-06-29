@@ -1,0 +1,306 @@
+﻿/* Основна структура фільтра */
+.offcanvas {
+    transition: transform 0.3s ease-in-out !important;
+    opacity: 1 !important;
+}
+
+    .offcanvas.showing,
+    .offcanvas.show,
+    .offcanvas.hiding {
+        visibility: visible !important;
+    }
+
+.offcanvas-backdrop {
+    opacity: 0 !important;
+}
+
+.filter-sections {
+    padding: 0;
+}
+
+.offcanvas-header {
+    border-bottom: 1px solid var(--bs-border-color);
+    padding: 0.75rem 1rem;
+}
+
+.offcanvas-body {
+    overflow-y: auto;
+    padding: 0;
+}
+
+/* Кнопки дій */
+.filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+    .btn-icon:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .btn-icon i {
+        font-size: 1.2rem;
+    }
+
+/* Секція фільтру */
+.filter-section {
+    border-bottom: 1px solid var(--bs-border-color);
+    overflow: hidden;
+}
+
+/* Заголовок секції з анімацією розкриття */
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    background-color: rgba(var(--bs-tertiary-bg-rgb), 0.5);
+    transition: background-color 0.2s;
+    position: relative;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+    .filter-header:hover,
+    .filter-header:focus {
+        background-color: rgba(var(--bs-tertiary-bg-rgb), 0.8);
+        outline: none;
+    }
+
+    .filter-header h6 {
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+
+    .filter-header i {
+        transition: transform 0.3s ease;
+    }
+
+    /* Умова для згортання/розгортання використовуючи чисту CSS */
+    .filter-header ~ .filter-content {
+        max-height: 1000px; /* Розгортає вміст */
+        transition: max-height 0.3s ease, padding 0.2s;
+        overflow: hidden;
+    }
+
+    .filter-header.collapsed ~ .filter-content {
+        max-height: 0; /* Згортає вміст */
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .filter-header.collapsed i {
+        transform: rotate(180deg);
+    }
+
+/* Вміст секції фільтрів */
+.filter-content {
+    padding: 0.5rem 1rem 1rem;
+}
+
+/* Область скролу для довгих списків */
+.filter-scroll-area {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bs-gray-500) transparent;
+}
+
+    .filter-scroll-area::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .filter-scroll-area::-webkit-scrollbar-thumb {
+        background-color: var(--bs-gray-500);
+        border-radius: 3px;
+    }
+
+    .filter-scroll-area::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+
+/* Поле пошуку у секції */
+.search-input {
+    margin-bottom: 0.5rem;
+}
+
+.filter-search {
+    font-size: 0.875rem;
+}
+
+/* Кнопки вибору всіх/очистити */
+.filter-actions-mini {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+/* Оформлення чекбоксів в списку */
+.list-group-item {
+    padding: 0.5rem;
+    border-left: none;
+    border-right: none;
+    transition: background-color 0.2s;
+}
+
+    .list-group-item:hover {
+        background-color: rgba(var(--bs-tertiary-bg-rgb), 0.5);
+    }
+
+    .list-group-item:first-child {
+        border-top-left-radius: 0.375rem;
+        border-top-right-radius: 0.375rem;
+    }
+
+    .list-group-item:last-child {
+        border-bottom-left-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+    }
+
+.form-check {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.form-check-label {
+    margin-left: 0.25rem;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+}
+
+/* Візуальне представлення цінового діапазону та специфікацій */
+.price-slider-container,
+.spec-range {
+    margin: 0.5rem 0;
+    padding: 0.5rem 0;
+    position: relative;
+}
+
+.price-track,
+.spec-track {
+    height: 6px;
+    background-color: var(--bs-border-color);
+    border-radius: 3px;
+    position: relative;
+}
+
+/* Мітки цін */
+.price-range-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+}
+
+/* Спеціальні стилі для характеристик */
+.spec-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem;
+}
+
+/* Адаптивність для мобільних пристроїв */
+@media (max-width: 576px) {
+    .filter-scroll-area {
+        max-height: 150px;
+    }
+}
+
+/* Стилі для подвійного слайдера ціни */
+.double-range-container {
+    position: relative;
+    height: 30px;
+    margin: 10px 0;
+}
+
+.double-range {
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    margin: 0;
+    background: none;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+    z-index: 3;
+}
+
+    .double-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        background: var(--bs-primary);
+        border-radius: 50%;
+        border: 2px solid #fff;
+        cursor: pointer;
+        pointer-events: auto;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .double-range::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        background: var(--bs-primary);
+        border-radius: 50%;
+        border: 2px solid #fff;
+        cursor: pointer;
+        pointer-events: auto;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+.range-track {
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    background: var(--bs-border-color);
+    border-radius: 3px;
+    top: 13px;
+    z-index: 1;
+}
+
+.range-selection {
+    position: absolute;
+    background: var(--bs-primary);
+    height: 100%;
+    border-radius: 3px;
+}
+
+/* Стилі для слайдерів специфікацій */
+.spec-range-container {
+    margin-top: 0.5rem;
+}
+
+.form-range::-webkit-slider-thumb {
+    background-color: var(--bs-primary);
+}
+
+.form-range::-moz-range-thumb {
+    background-color: var(--bs-primary);
+}
+
+.spec-range {
+    height: 6px;
+}
+
+.current-value {
+    font-weight: bold;
+    color: var(--bs-primary);
+}

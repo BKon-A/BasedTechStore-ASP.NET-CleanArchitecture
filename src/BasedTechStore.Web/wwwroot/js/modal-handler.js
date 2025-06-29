@@ -1,7 +1,10 @@
-﻿class ModalHandler {
+﻿//const { Button } = require("bootstrap");
+
+class ModalHandler {
     constructor(modalId) {
         this.modalId = modalId;
         this.modal = document.getElementById(modalId);
+        this.modalInstance = bootstrap.Modal.getInstance(this.modal) || new bootstrap.Modal(this.modal);
         this.bootstrapModal = null;
         this.hasChanges = false;
         this.redirectUrl = '';
@@ -68,13 +71,26 @@
         if (cancelBtn) {
             cancelBtn.removeEventListener('click', this.cancelHandler);
             this.cancelHandler = (e) => {
-                e.preventDefault();
+                //e.preventDefault();
                 e.stopPropagation();
                 console.log(`Cancel button clicked in ${this.modalId}`);
                 this.onCancel();
             };
             cancelBtn.addEventListener('click', this.cancelHandler);
         }
+
+        const closeBtns = this.modal.querySelectorAll('.btn-close, .cancel-btn, [data-role="cancel"],' +
+            + 'button.btn-secondary:not(.btn-confirm):not(.btn-save)');
+        closeBtns.forEach(btn => {
+            btn.removeEventListener('click', this.closeHandler);
+            this.closeHandler = (e) => {
+                //e.preventDefault();
+                e.stopPropagation();
+                console.log(`Close/cancel button clicked in ${this.modalId}`);
+                this.onCancel();
+            };
+            btn.addEventListener('click', this.closeHandler);
+        });
     }
 
     show() {
@@ -91,6 +107,14 @@
             this.hasChanges = false;
             try {
                 this.bootstrapModal.hide();
+
+                // Modal forsed removal
+                //if (this.modal) {
+                //    this.modal.classList.remove('show');
+                //    document.body.classList.remove('modal-open');
+                //    const backdrop = document.querySelector('.modal-backdrop');
+                //    if (backdrop) backdrop.remove();
+                //}
                 console.log(`Modal ${this.modalId} hidden successfully`);
             } catch (error) {
                 console.error(`Error hiding modal ${this.modalId}:`, error);
@@ -154,6 +178,7 @@
         console.log(`Modal ${this.modalId} cancelled`);
         this.hasChanges = false;
         this.hide();
+        this.modalInstance.hide();
     }
 
     destroy() {

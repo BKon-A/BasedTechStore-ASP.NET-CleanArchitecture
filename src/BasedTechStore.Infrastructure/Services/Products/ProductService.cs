@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Runtime.InteropServices;
+using System.Globalization;
 
 namespace BasedTechStore.Infrastructure.Services.Products
 {
@@ -150,6 +150,15 @@ namespace BasedTechStore.Infrastructure.Services.Products
             return _mapper.Map<List<SubCategoryDto>>(subcategories);
         }
 
+        public async Task<SubCategoryDto?> GetSubCategoryByIdAsync(Guid subcategoryId)
+        {
+            var subcategory = await _context.SubCategories
+                .Include(sc => sc.Category)
+                .FirstOrDefaultAsync(sc => sc.Id == subcategoryId);
+
+            return _mapper.Map<SubCategoryDto>(subcategory);
+        }
+
         public async Task<string?> GetSubCategoryNameByIdAsync(Guid subcategoryId)
         {
             return await _context.SubCategories
@@ -166,6 +175,89 @@ namespace BasedTechStore.Infrastructure.Services.Products
 
             return _mapper.Map<List<CategoryDto>>(categories);
         }
+
+        public async Task<List<ProductDto>> GetFilteredProductsAsync(decimal? minPrice, decimal? maxPrice,
+            List<Guid> categoryIds, List<string> brands, Dictionary<Guid, (string Min, string Max)> specificationFilters, 
+            List<Guid> subcategoryIds = null)
+        {
+            var query = _context.Products.AsQueryable();
+
+            if (minPrice.HasValue)
+            {
+                query = query.Where(p => p.Price >= minPrice.Value);
+            }
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(p => p.Price <= maxPrice.Value);
+            }
+            if (categoryIds != null && categoryIds.Count > 0)
+            {
+                query = query.Where(p => categoryIds.Contains(p.SubCategory.CategoryId));
+            }
+            if (subcategoryIds != null && subcategoryIds.Any())
+            {
+                query = query.Where(p => subcategoryIds.Contains(p.SubCategoryId));
+            }
+            if (brands != null && brands.Any())
+            {
+                query = query.Where(p => brands.Contains(p.Brand));
+            }
+
+            var products = await query.ToListAsync();
+
+            if (specificationFilters != null && specificationFilters.Any())
+            {
+                var productIds = products.Select(p => p.Id).ToList();
+                var specifications = await _context.ProductSpecifications
+                    .Where(ps => productIds.Contains(ps.ProductId))
+                    .ToListAsync();
+
+                foreach (var filter in specificationFilters)
+                {
+                    var specTypeId = filter.Key;
+                    var specTypeName = (await _context.SpecificationTypes.FindAsync(specTypeId))?.Name ?? "Unknown";
+                    var minValue = filter.Value.Min;
+                    var maxValue = filter.Value.Max;
+
+                    _logger.LogInformation($"Filtering by spec type: {specTypeName}, Min: {minValue}, Max: {maxValue}");
+
+                    if (!string.IsNullOrEmpty(minValue))
+                    {
+                        var filteredProducIds = specifications
+                            .Where(ps => ps.SpecificationTypeId == specTypeId &&
+                                decimal.TryParse(ps.Value?.Replace(',', '.'), NumberStyles.Any, 
+                                    CultureInfo.InvariantCulture, out var value) &&
+                                decimal.TryParse(minValue.Replace(',', '.'), NumberStyles.Any, 
+                                    CultureInfo.InvariantCulture, out var minVal) &&
+                                value >= minVal)
+                            .Select(ps => ps.ProductId)
+                            .ToList();
+
+                        _logger.LogInformation($"After min filter, found {filteredProducIds.Count} products for spec type: {specTypeName}");
+                        products = products.Where(p => filteredProducIds.Contains(p.Id)).ToList();
+                    }
+
+                    if (!string.IsNullOrEmpty(maxValue))
+                    {
+                        var filteredProducIds = specifications
+                            .Where(ps => ps.SpecificationTypeId == specTypeId &&
+                                decimal.TryParse(ps.Value?.Replace(',', '.'), NumberStyles.Any, 
+                                    CultureInfo.InvariantCulture, out var value) &&
+                                decimal.TryParse(maxValue.Replace(',', '.'), NumberStyles.Any, 
+                                    CultureInfo.InvariantCulture, out var maxVal) &&
+                                value <= maxVal)
+                            .Select(ps => ps.ProductId)
+                            .ToList();
+
+                        _logger.LogInformation($"After max filter, found {filteredProducIds.Count} products for spec type: {specTypeName}");
+                        products = products.Where(p => filteredProducIds.Contains(p.Id)).ToList();
+                    }
+                }
+            }
+
+            return _mapper.Map<List<ProductDto>>(products);
+        }
+
         // ============================= End get data ==============================
 
         // ============================= Start update data =========================
@@ -173,31 +265,43 @@ namespace BasedTechStore.Infrastructure.Services.Products
         {
             if (image == null || image.Length == 0)
             {
+                _logger.LogWarning("No image file provided for upload");
                 return null;
             }
-
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-            if (!Directory.Exists(uploadsFolder))
+            try
             {
-                Directory.CreateDirectory(uploadsFolder);
+                var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var fileName = Path.GetFileNameWithoutExtension(image.FileName);
+                var fileExtension = Path.GetExtension(image.FileName);
+                var uniqueFileName = $"{fileName}_{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.CopyToAsync(fileStream);
+                }
+
+                if (File.Exists(filePath))
+                {
+                    _logger.LogInformation($"File uploaded successfully: {filePath}");
+                    return $"/uploads/{uniqueFileName}";
+                }
+                else
+                {
+                    _logger.LogError($"File not found after upload attempt: {filePath}");
+                    return null;
+                }
             }
-
-            var fileName = Path.GetFileNameWithoutExtension(image.FileName);
-            var fileExtension = Path.GetExtension(image.FileName);
-            var uniqueFileName = $"{fileName}_{Guid.NewGuid()}{fileExtension}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            if (File.Exists(filePath))
+            catch (Exception ex)
             {
-                return $"/uploads/{uniqueFileName}";
+                _logger.LogError($"File not be uploaded: {ex.Message}");
+                return null;
             }
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await image.CopyToAsync(fileStream);
-            }
-
-            return $"/uploads/{uniqueFileName}";
         }
 
         public async Task UpdateProductAsync(ProductDto productDto)
@@ -288,6 +392,18 @@ namespace BasedTechStore.Infrastructure.Services.Products
             }
 
             await _context.SaveChangesAsync();
+
+            // Delete unused images after saving products
+            try
+            {
+                int deletedCount = await CleanupAllUnusedImagesAsync();
+                _logger.LogInformation($"Cleanup completed. Total unused images deleted: {deletedCount}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during cleanup of unused images");
+            }
+
             return _mapper.Map<List<ProductDto>>(updatedProducts);
         }
 
@@ -390,9 +506,18 @@ namespace BasedTechStore.Infrastructure.Services.Products
 
                         if (!isUsed)
                         {
+                            _logger.LogInformation($"Deleting unused image file: {imageUrl}");
                             File.Delete(filePath);
                             deletedCount++;
                         }
+                        else
+                        {
+                            _logger.LogInformation($"Image file is still in use: {imageUrl}");
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Image file not found: {imageUrl}");
                     }
                 }
                 catch (Exception ex)
@@ -400,9 +525,67 @@ namespace BasedTechStore.Infrastructure.Services.Products
                     _logger.LogError(ex, $"Error deleting image file: {imageUrl}");
                 }
             }
+
+            _logger.LogInformation($"Total unused images deleted: {deletedCount}");
             return deletedCount;
         }
 
+        public async Task<int> CleanupAllUnusedImagesAsync()
+        {
+            string webRootPath = _webHostEnvironment.WebRootPath;
+            var uploadsFolder = Path.Combine(webRootPath, "uploads");
+
+            if (!Directory.Exists(uploadsFolder))
+            {
+                _logger.LogInformation("Uploads folder does not exist, nothing to clean up.");
+                return 0;
+            }
+
+            var allFiles = Directory.GetFiles(uploadsFolder)
+                .Select(f => $"/uploads/{Path.GetFileName(f)}")
+                .ToList();
+
+            var usedImageUrls = await _context.Products
+                .Where(p => !string.IsNullOrEmpty(p.ImageUrl))
+                .Select(p => p.ImageUrl)
+                .Distinct()
+                .ToListAsync();
+
+            _logger.LogInformation($"Found {allFiles.Count} total files in uploads folder.");
+            _logger.LogInformation($"Found {usedImageUrls.Count} used images in the database.");
+
+            var unusedImages = allFiles.
+                Where(f => !usedImageUrls.Contains(f))
+                .ToList();
+
+            _logger.LogInformation($"Found {unusedImages.Count} unused images to delete.");
+
+            int deletedCount = 0;
+            foreach (var file in unusedImages)
+            {
+                try
+                {
+                    var filePath = Path.Combine(webRootPath, file.TrimStart('/'));
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                        deletedCount++;
+                        _logger.LogInformation($"Deleted unused image file: {file}");
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Image file not found during cleanup: {file}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error deleting image file during cleanup: {file}");
+                }
+            }
+
+            _logger.LogInformation($"Total unused images deleted during cleanup: {deletedCount}");
+            return deletedCount;
+        }
         public async Task DeleteProductAsync(Guid productId)
         {
             var product = await _context.Products.FindAsync(productId);

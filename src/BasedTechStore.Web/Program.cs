@@ -4,57 +4,63 @@ using BasedTechStore.Application.Mapping;
 using BasedTechStore.Domain.Entities.Identity;
 using BasedTechStore.Infrastructure.Persistence;
 using BasedTechStore.Infrastructure.Persistence.Seed;
+using BasedTechStore.Infrastructure.Services.Carts;
 using BasedTechStore.Infrastructure.Services.Identity;
 using BasedTechStore.Infrastructure.Services.Products;
 using BasedTechStore.Infrastructure.Services.Specifications;
+using BasedTechStore.Web.Middlewares;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddAuthorization();
 
-JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+builder.Services.AddSingleton<JwtSecurityTokenHandler>();
 
-builder.Services.AddAuthentication(options =>
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+     {
+         options.LoginPath = "/";
+         options.AccessDeniedPath = "/";
+         options.ExpireTimeSpan = TimeSpan.FromHours(24);
+         options.SlidingExpiration = true;
+         options.Events.OnRedirectToLogin = context =>
+         {
+             if (context.Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+             {
+                 context.Response.StatusCode = 401;
+                 return Task.CompletedTask;
+             }
+             context.Response.Redirect(context.RedirectUri);
+             return Task.CompletedTask;
+         };
+     });
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-    .AddJwtBearer(options =>
-    {
-        var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-        var issuer = jwtSettings["Issuer"] ?? throw new ArgumentNullException("JwtSettings:Issuer configuration is missing");
-        var audience = jwtSettings["Audience"] ?? throw new ArgumentNullException("JwtSettings:Audience configuration is missing");
-        var secret = jwtSettings["SecretKey"] ?? throw new ArgumentNullException("JwtSettings:Secret configuration is missing");
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = issuer,
-            ValidAudience = audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
-        };
-
-        options.MapInboundClaims = true;
-    });
-    //.AddCookie(IdentityConstants.ApplicationScheme, options =>
-    //{
-    //    options.LoginPath = "/Auth/SignIn";
-    //    options.LogoutPath = "/Auth/SignOut";
-    //});
+    options.Cookie.Name = ".BasedTechStore.Session";
+    options.IdleTimeout = TimeSpan.FromHours(24);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 builder.Services.AddLogging();
 
@@ -68,6 +74,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISpecificationService, SpecificationService>();
+builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IManagerSeeder, ManagerSeeder>();
 
 builder.Services.AddDbContext<AppDbContext>(options => 
@@ -100,28 +107,14 @@ app.MapIdentityApi<AppUser>();
 
 app.UseStaticFiles();
 
-app.Use(async (context, next) =>
-{
-    if (context.Request.Cookies.ContainsKey("access-token"))
-    {
-        var token = context.Request.Cookies["access-token"];
-        context.Request.Headers["Authorization"] = $"Bearer {token}";
-    }
-    await next();
-});
-
-//app.Use(async (context, next) =>
-//{
-//    context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
-//    context.Response.Headers["Pragma"] = "no-cache";
-//    context.Response.Headers["Expires"] = "0";
-//    await next();
-//});
+app.UseMiddleware<JwtCookieMiddleware>();
 
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",

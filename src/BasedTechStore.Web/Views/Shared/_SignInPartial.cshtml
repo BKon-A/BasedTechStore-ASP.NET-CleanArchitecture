@@ -1,6 +1,4 @@
-﻿@model BasedTechStore.Application.DTOs.Identity.Request.SignInRequest
-
-<div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalTitle" aria-hidden="true">
+﻿<div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -8,19 +6,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                @if (ViewData.ModelState["SignIn"]?.Errors?.Count > 0)
-                {
-                    <div class="alert alert-danger">
-                        @foreach (var error in ViewData.ModelState["SignIn"].Errors)
-                        {
-                            <div>@error.ErrorMessage</div>
-                        }
-                    </div>
-                }
+                <div id="signInErrors" class="d-none"></div>
 
-                @using (Html.BeginForm("SignIn", "Auth", FormMethod.Post, new { @class = "form-horizontal" }))
-                {
+                <form id="signInForm">
                     @Html.AntiForgeryToken()
+
                     <div class="form-floating mb-3">
                         <input type="email" class="form-control" id="Email" name="Email" placeholder="Email" required>
                         <label for="Email">Email</label>
@@ -34,7 +24,7 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" name="Close">Закрити</button>
                         <button type="submit" class="btn btn-primary">Вхід</button>
                     </div>
-                }
+                </form>
             </div>
         </div>
     </div>

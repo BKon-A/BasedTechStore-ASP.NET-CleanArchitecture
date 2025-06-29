@@ -1089,63 +1089,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    //function saveProductSpecs() {
-    //    if (!productSpecsForm) return;
-
-    //    const productId = productSpecsForm.dataset.productId;
-    //    if (!productId) {
-    //        console.error('Product ID not found in form data');
-    //        return;
-    //    }
-
-    //    const formData = new FormData();
-    //    formData.append('productId', productId);
-
-    //    productSpecsForm.querySelectorAll('.product-spec-input').forEach(input => {
-    //        const value = input.value.trim();
-    //        if (value) {
-    //            formData.append(`specifications[${input.dataset.specTypeId}]`, value);
-    //        }
-    //    });
-
-    //    const token = productSpecsForm.querySelector('input[name="__RequestVerificationToken"]').value;
-    //    formData.append('__RequestVerificationToken', token);
-
-    //    fetch('/AdminPanel/SaveProductSpecifications', {
-    //        method: 'POST',
-    //        body: formData
-    //    })
-    //        .then(response => response.json())
-    //        .then(result => {
-    //            if (result.success) {
-    //                window.createInfoModal({
-    //                    id: 'saveSpecsSuccessModal',
-    //                    title: 'Збережено',
-    //                    message: 'Характеристики продукту успішно збережено.',
-    //                    type: 'success',
-    //                    showCancelButton: false,
-    //                    showSaveButton: false,
-    //                    confirmText: 'OK'
-    //                });
-    //                setHasChanges(false);
-    //            } else {
-    //                throw new Error(result.message || 'Не вдалося зберегти характеристики продукту');
-    //            }
-    //        })
-    //        .catch(error => {
-    //            console.error('Error saving product specifications:', error);
-    //            window.createInfoModal({
-    //                id: 'saveSpecsErrorModal',
-    //                title: 'Помилка',
-    //                message: 'Не вдалося зберегти характеристики продукту: ' + error.message,
-    //                type: 'danger',
-    //                showCancelButton: false,
-    //                showSaveButton: false,
-    //                confirmText: 'OK'
-    //            });
-    //        });
-    //}
-
     function deleteSpecCategory(categoryId) {
         window.createInfoModal({
             id: 'confirmDeleteSpecCategory',

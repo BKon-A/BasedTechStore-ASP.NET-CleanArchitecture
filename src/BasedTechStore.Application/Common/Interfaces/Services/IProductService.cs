@@ -16,6 +16,7 @@ namespace BasedTechStore.Application.Common.Interfaces.Services
         Task<List<CategoryDto>> SaveCategoriesAsync(List<CategoryDto> categories);
         Task<List<SubCategoryDto>> GetAllSubCategoriesAsync();
         Task<List<SubCategoryDto>> GetSubCategoriesByCategoryIdAsync(Guid categoryId);
+        Task<SubCategoryDto?> GetSubCategoryByIdAsync(Guid subcategoryId);
         Task<string?> GetSubCategoryNameByIdAsync(Guid subcategoryId);
 
         Task<List<ProductDto>> GetAllProductsAsync();
@@ -24,10 +25,14 @@ namespace BasedTechStore.Application.Common.Interfaces.Services
         Task<List<ProductDto>> SaveProductsAsync(List<ProductDto> productDtos);
         Task<ProductDto?> GetProductByIdAsync(Guid productId);
         Task<ProductDetailsDto> GetProductDetailsByProductIdAsync(Guid productId);
+        Task<List<ProductDto>> GetFilteredProductsAsync(decimal? minPrice, decimal? maxPrice,
+            List<Guid> categoryIds, List<string> brands, Dictionary<Guid, (string Min, string Max)> specificationFilters,
+            List<Guid> subcategoryIds = null);
 
         Task<string?> UploadProductImageAsync(IFormFile image);
 
         Task<int> DeleteUnusedImagesAsync(List<string> imageUrls);
+        Task<int> CleanupAllUnusedImagesAsync();
 
         Task UpdateProductAsync(ProductDto productDto);
         Task DeleteProductAsync(Guid productId);

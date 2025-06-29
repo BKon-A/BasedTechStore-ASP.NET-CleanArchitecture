@@ -2,7 +2,9 @@
     ViewData["Title"] = "Домашня сторінка";
 }
 
-<div id="homeCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+<link rel="stylesheet" href="~/css/home-slider.css" />
+
+<div id="homeCarousel" class="carousel slide" data-bs-ride="carousel">
     <div class="carousel-indicators">
         <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Слайд 1"></button>
         <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="1" aria-label="Слайд 2"></button>
@@ -10,22 +12,28 @@
     </div>
     <div class="carousel-inner">
         <div class="carousel-item active">
-            <img src="~/images/slider1.jpg" class="d-block w-100 carousel-img" alt="Slide 1">
-            <div class="carousel-caption d-none d-md-block bg-opacity">
+            <div class="carousel-image-container">
+                <img src="~/uploads/acer_nitro v_15_anv15-541-545T_b04dbab8-215a-4177-883a-5a563e339f28.webp" class="carousel-img" alt="Slide 1">
+            </div>
+            <div class="carousel-caption d-md-block bg-opacity">
                 <h5>Ласкаво просимо до BasedTechStore</h5>
                 <p>Найкращі товари за доступними цінами.</p>
             </div>
         </div>
         <div class="carousel-item">
-            <img src="~/images/slider2.jpg" class="d-block w-100 carousel-img" alt="Slide 2">
-            <div class="carousel-caption d-none d-md-block bg-opacity">
+            <div class="carousel-image-container">
+                <img src="~/uploads/HP Laptop 15-fc0107ua_d564b7d2-5384-4e79-b592-bdc8bfdb5421.webp" class="carousel-img" alt="Slide 2">
+            </div>
+            <div class="carousel-caption d-md-block bg-opacity">
                 <h5>Широкий вибір ноутбуків</h5>
                 <p>Знайдіть ідеальний ноутбук для роботи чи навчання.</p>
             </div>
         </div>
         <div class="carousel-item">
-            <img src="~/images/slider3.jpg" class="d-block w-100 carousel-img" alt="Slide 3">
-            <div class="carousel-caption d-none d-md-block bg-opacity">
+            <div class="carousel-image-container">
+                <img src="~/uploads/hator_hypergang_2X_wireless_black-yellow_6785b3eb-c5ef-49c1-add0-b70e45871a93.webp" class="carousel-img" alt="Slide 3">
+            </div>
+            <div class="carousel-caption d-md-block bg-opacity">
                 <h5>Аксесуари та комплектуючі</h5>
                 <p>Все, що потрібно для вашого комп'ютера.</p>
             </div>
@@ -40,3 +48,7 @@
         <span class="visually-hidden">Наступний</span>
     </button>
 </div>
+
+@section Scripts {
+    <script src="~/js/home-slider.js"></script>
+}

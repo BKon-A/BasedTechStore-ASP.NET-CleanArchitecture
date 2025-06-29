@@ -1,5 +1,5 @@
 ﻿@using BasedTechStore.Web.ViewModels.Products;
-@model List<ProductItemVM>
+@model ProductFilteringListVM
 
 @{
     ViewData["Title"] = "Товари";
@@ -7,19 +7,42 @@
 
 <h2 class="mb-4">Список товарів</h2>
 
-<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-    @foreach (var product in Model)
-    {
-        <div class="col">
-            <a asp-controller="Product" asp-action="Details" asp-route-productid="@product.Id" class="text-decoration-none">
-                <div class="card product-card h-100">
-                    <img src="@product.ImageUrl" class="product-card-image" alt="@product.Name">
-                    <div class="card-body">
-                        <h5 class="card-title">@product.Name</h5>
-                        <p class="card-text">@product.Price.ToString("C")</p>
-                    </div>
-                </div>
-            </a>
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12 mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas">
+                <i class="bi bi-funnel"></i> Фільтри
+            </button>
         </div>
-    }
+        <div class="col-12">
+            <h2 class="mb-4">Список товарів</h2>
+
+            @if (!Model.Products.Any())
+            {
+                <div class="alert alert-info">Немає товарів для відображення.</div>
+            }
+            else
+            {
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    @foreach (var product in Model.Products)
+                    {
+                        <div class="col">
+                            <a asp-controller="Product" asp-action="Details" asp-route-productid="@product.Id" class="text-decoration-none">
+                                <div class="card product-card h-100">
+                                    <img src="@product.ImageUrl" class="product-card-image" alt="@product.Name">
+                                    <div class="card-body">
+                                        <h5 class="card-title">@product.Name</h5>
+                                        <p class="card-text">@product.Price.ToString("C")</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        
+    </div>
 </div>
+
+@await Html.PartialAsync("_ProductFiltersPartial", Model.ProductFilterVM)

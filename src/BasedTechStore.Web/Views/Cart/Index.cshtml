@@ -1,0 +1,126 @@
+﻿@model BasedTechStore.Web.ViewModels.Cart.CartVM
+@{
+    ViewData["Title"] = "Кошик";
+}
+
+<div class="container">
+    <h2 class="mb-4">Кошик</h2>
+
+    @if (Model?.IsEmpty != false)
+    {
+        <div class="row" id="cart-empty">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Ваш кошик порожній.
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <div class="row">
+                            <div class="col">Товар</div>
+                            <div class="col-2 text-center">Ціна</div>
+                            <div class="col-2 text-center">Кількість</div>
+                            <div class="col-2 text-end">Разом</div>
+                        </div>
+                    </div>
+                    <div class="card-body" data-cart-id="@Model.Id">
+                        @foreach (var item in Model.CartItems)
+                        {
+                            <div class="row mb-4 cart-item" data-id="@item.Id" data-price="@item.Price">
+                                <div class="col d-flex">
+                                    <div class="flex-shrink-0">
+                                        @if (!string.IsNullOrEmpty(item.ProductImageUrl))
+                                        {
+                                            <img src="@item.ProductImageUrl" alt="@item.ProductName" class="img-fluid rounded" style="max-width: 80px; max-height: 80px;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-light d-flex align-items-center justify-content-center rounded" style="width: 80px; height: 80px;">
+                                                <i class="bi bi-image text-muted"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="ms-3">
+                                        <h5 class="mb-1">@item.ProductName</h5>
+                                        @if (!string.IsNullOrEmpty(item.ProductBrand))
+                                        {
+                                            <span class="badge bg-secondary">@item.ProductBrand</span>
+                                        }
+                                        <button class="btn btn-sm text-danger remove-item mt-2" data-id="@item.Id">
+                                            <i class="bi bi-trash"></i> Видалити
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-2 text-center">
+                                    <span class="item-price">@item.Price.ToString("C")</span>
+                                </div>
+                                <div class="col-2 text-center">
+                                    <div class="input-group input-group-sm">
+                                        <button class="btn btn-outline-secondary decrement-quantity" type="button">-</button>
+                                        <input type="number" class="form-control text-center item-quantity" value="@item.Quantity" min="1" max="99">
+                                        <button class="btn btn-outline-secondary increment-quantity" type="button">+</button>
+                                    </div>
+                                </div>
+                                <div class="col-2 text-end">
+                                    <span class="item-total fw-bold">@item.TotalPrice.ToString("C")</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Сума замовлення</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Товари (@Model.TotalItems):</span>
+                            <span class="fw-bold cart-subtotal">@Model.TotalPrice.ToString("C")</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="fw-bold">До сплати:</span>
+                            <span class="fw-bold text-success fs-5 cart-total">@Model.TotalPrice.ToString("C")</span>
+                        </div>
+                        <button type="button" class="btn btn-success w-100" id="checkout-btn">
+                            <i class="bi bi-credit-card me-2"></i>Оформити замовлення
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <a asp-controller="Product" asp-action="Index" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Продовжити покупки
+                </a>
+            </div>
+            <div class="col-md-6 text-end">
+                <button type="button" class="btn btn-outline-danger" id="clear-cart-btn" data-cart-id="@Model.Id">
+                    <i class="bi bi-trash me-2"></i>Очистити кошик
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Переконуємося, що код для кошика буде запущено
+            if (document.querySelector('.cart-item')) {
+                initCartPage();
+            }
+        });
+    </script>
+}

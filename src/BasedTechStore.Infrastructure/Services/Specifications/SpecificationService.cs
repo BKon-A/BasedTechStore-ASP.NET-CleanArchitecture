@@ -227,6 +227,18 @@ namespace BasedTechStore.Infrastructure.Services.Specifications
             return result;
         }
 
+        public async Task<List<SpecificationTypeDto>> GetFilterableSpecificationTypesAsync()
+        {
+            var types = await _dbContext.SpecificationTypes
+                .Include(st => st.SpecificationCategory)
+                .Where(st => st.IsFilterable)
+                .OrderBy(st => st.SpecificationCategory.DisplayOrder)
+                .ThenBy(st => st.DisplayOrder)
+                .ToListAsync();
+
+            return _mapper.Map<List<SpecificationTypeDto>>(types);
+        }
+
         public async Task SaveAllSpecificationsAsync(
             List<SpecificationCategoryDto> createdCategories,
             List<SpecificationCategoryDto> updatedCategories,

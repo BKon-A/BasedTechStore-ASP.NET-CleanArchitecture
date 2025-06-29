@@ -7,6 +7,7 @@ using BasedTechStore.Domain.Entities.Categories;
 using BasedTechStore.Domain.Entities.Orders;
 using System.Net.Http.Headers;
 using BasedTechStore.Domain.Entities.Specifications;
+using BasedTechStore.Domain.Entities.Cart;
 
 namespace BasedTechStore.Infrastructure.Persistence
 {
@@ -15,6 +16,8 @@ namespace BasedTechStore.Infrastructure.Persistence
         public DbSet<Category> Categories { get; set; }
         public DbSet<SubCategory> SubCategories { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<SpecificationType> SpecificationTypes { get; set; }
@@ -49,6 +52,28 @@ namespace BasedTechStore.Infrastructure.Persistence
                 .WithOne(p => p.SubCategory)
                 .HasForeignKey(sc => sc.SubCategoryId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Cart -> CartItem(one-to-many)
+            modelBuilder.Entity<Cart>()
+                .HasMany(c => c.CartItems)
+                .WithOne(ci => ci.Cart)
+                .HasForeignKey(ci => ci.CartId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Cart -> AppUser(many-to-one, optional)
+            modelBuilder.Entity<Cart>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .IsRequired(false) // Optional relationship
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // CartItem -> Product(many-to-one)
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.Product)
+                .WithMany()
+                .HasForeignKey(ci => ci.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Order -> OrderItem(one-to-many)
             modelBuilder.Entity<Order>()
@@ -102,7 +127,18 @@ namespace BasedTechStore.Infrastructure.Persistence
                 .HasForeignKey(ps => ps.SpecificationTypeId)
                 .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
 
-            // Indexing for faster lookups
+            // =============== Indexing for faster lookups ===================
+            modelBuilder.Entity<Cart>()
+                .HasIndex(c => c.UserId);
+            modelBuilder.Entity<Cart>()
+                .HasIndex(c => c.SessionId);
+
+            modelBuilder.Entity<CartItem>()
+                .Property(ci => ci.Price)
+                .HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<CartItem>()
+                .HasIndex(ci => ci.ProductId);
+
             modelBuilder.Entity<SpecificationCategory>()
                 .HasIndex(sc => sc.ProductCategoryId);
 
@@ -111,10 +147,8 @@ namespace BasedTechStore.Infrastructure.Persistence
 
             modelBuilder.Entity<ProductSpecification>()
                 .HasIndex(ps => ps.ProductId);
-
             modelBuilder.Entity<ProductSpecification>()
                 .HasIndex(ps => ps.SpecificationTypeId);
-
             modelBuilder.Entity<ProductSpecification>()
                 .Property(ps => ps.Value)
                 .HasColumnType("nvarchar(max)");

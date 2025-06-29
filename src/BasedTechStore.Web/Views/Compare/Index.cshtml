@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Порівняння товарів";
+}
+
+<div class="container">
+    <h2 class="mb-4">Порівняння товарів</h2>
+
+    <div class="row" id="compare-items">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                У вас поки немає товарів для порівняння.
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a asp-controller="Product" asp-action="Index" class="btn btn-primary">
+            <i class="bi bi-arrow-left me-2"></i>Продовжити покупки
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Тут буде JavaScript для порівняння товарів
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Compare page initialized');
+        });
+    </script>
+}

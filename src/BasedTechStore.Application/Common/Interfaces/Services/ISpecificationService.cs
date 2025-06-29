@@ -16,6 +16,7 @@ namespace BasedTechStore.Application.Common.Interfaces.Services
         Task<List<SpecificationTypeDto>> GetSpecificationTypesByCategoryIdAsync(Guid categoryId);
         Task<List<SpecificationTypeDto>> GetSpecificationTypesBySpecCategoryIdAsync(Guid specCategoryId);
         Task<SpecificationTypeDto> GetSpecificationTypeAsync(Guid id);
+        Task<List<SpecificationTypeDto>> GetFilterableSpecificationTypesAsync();
         Task<SpecificationTypeDto> CreateSpecificationTypeAsync(SpecificationTypeDto specificationTypeDto);
         Task<SpecificationTypeDto> UpdateSpecificationTypeAsync(SpecificationTypeDto specificationTypeDto);
         Task<bool> DeleteSpecificationTypeAsync(Guid id);

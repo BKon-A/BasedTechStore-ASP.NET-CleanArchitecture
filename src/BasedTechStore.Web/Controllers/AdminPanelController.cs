@@ -5,17 +5,17 @@ using BasedTechStore.Application.DTOs.Product;
 using BasedTechStore.Application.DTOs.Specifications;
 using BasedTechStore.Web.ViewModels.AdminPanel;
 using BasedTechStore.Web.ViewModels.Categories;
+using BasedTechStore.Web.ViewModels.PendingChanges;
 using BasedTechStore.Web.ViewModels.Products;
 using BasedTechStore.Web.ViewModels.Specifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace BasedTechStore.Web.Controllers
 {
     [Authorize(Roles = "Manager")]
-    public class AdminPanelController : BaseController
+    public class AdminPanelController : Controller
     {
         private readonly IProductService _productService;
         private readonly ISpecificationService _specificationService;
@@ -47,7 +47,7 @@ namespace BasedTechStore.Web.Controllers
             return View(model);
         }
 
-        // =========================== Get Data ============================
+        // =========================== START Get Data ============================
         private async Task<ManageProductsVM> GetManageProductsVMAsync()
         {
             var productsVM = _mapper.Map<List<ProductItemVM>>(await _productService.GetAllProductsAsync());
@@ -276,9 +276,9 @@ namespace BasedTechStore.Web.Controllers
                 return StatusCode(500, "Error while getting product specifications form");
             }
         }
-        // =========================== Get Data ============================
+        // =========================== END Get Data ============================
 
-        // =========================== Update Data =========================
+        // =========================== START Update Data =========================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateSpecificationCategory(SpecificationCategoryVM specificationCategoryVM)
@@ -326,9 +326,36 @@ namespace BasedTechStore.Web.Controllers
                 return StatusCode(500, "Error while saving specification type");
             }
         }
-        // =========================== Update Data =========================
 
-        // =========================== Save Data ===========================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadImage(IFormFile image)
+        {
+            try
+            {
+                if (image == null || image.Length == 0)
+                {
+                    return Content("Не надано файл зображення");
+                }
+
+                string? imageUrl = await _productService.UploadProductImageAsync(image);
+
+                if (string.IsNullOrEmpty(imageUrl))
+                {
+                    return Content("Не вдалося завантажити зображення");
+                }
+
+                return Content(imageUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Помилка при завантаженні зображення");
+                return Content("Помилка при завантаженні зображення");
+            }
+        }
+        // =========================== END Update Data =========================
+
+        // =========================== START Save Data ===========================
         [HttpPost]
         [Authorize(Roles = "Manager")]
         [ValidateAntiForgeryToken]
@@ -478,7 +505,7 @@ namespace BasedTechStore.Web.Controllers
             }
         }
 
-        private void EnsureUniqueDisplayOrders(PendingChangesVM pendingChanges)
+        private void EnsureUniqueDisplayOrders(SpecsPendingChangesVM pendingChanges)
         {
             var allCategories = new List<SpecificationCategoryVM>();
             if (pendingChanges.CreatedCategories != null) allCategories.AddRange(pendingChanges.CreatedCategories);
@@ -550,9 +577,29 @@ namespace BasedTechStore.Web.Controllers
         {
             return await UpdateSpecificationType(model);
         }
-        // =========================== Save Data ===========================
+        // =========================== END Save Data ===========================
 
-        // =========================== Delete Data =========================
+        // =========================== START Delete Data =========================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUnusedImages(List<string> imageUrls)
+        {
+            try
+            {
+                if (imageUrls == null || !imageUrls.Any())
+                {
+                    return Content("Не надано URL-адреси зображень для видалення");
+                }
+                var deletedCount = await _productService.DeleteUnusedImagesAsync(imageUrls);
+                return Content(deletedCount.ToString());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while deleting unused images");
+                return Content("Помилка при спробі видалення невикористовуваних зображень");
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteSpecificationCategory(Guid id, Guid productCategoryId)
@@ -600,6 +647,6 @@ namespace BasedTechStore.Web.Controllers
                 return StatusCode(500, "Error while deleting specification type");
             }
         }
-        // =========================== Delete Data =========================
+        // =========================== END Delete Data =========================
     }
 }

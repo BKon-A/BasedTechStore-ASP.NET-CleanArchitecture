@@ -1,4 +1,5 @@
 ﻿using BasedTechStore.Web.ViewModels.Categories;
+using BasedTechStore.Web.ViewModels.PendingChanges;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BasedTechStore.Web.ViewModels.Specifications
@@ -7,7 +8,7 @@ namespace BasedTechStore.Web.ViewModels.Specifications
     {
         public List<CategoryItemVM> Categories { get; set; } = new();
 
-        public PendingChangesVM PendingChanges { get; set; } = new PendingChangesVM();
+        public SpecsPendingChangesVM PendingChanges { get; set; } = new SpecsPendingChangesVM();
         public List<SelectListItem> CategoryOptions => Categories?.Select(c => new SelectListItem
         {
             Value = c.Id.ToString(),

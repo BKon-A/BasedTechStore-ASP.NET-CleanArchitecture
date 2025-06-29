@@ -5,12 +5,10 @@ using BasedTechStore.Application.DTOs.Identity.Response;
 using BasedTechStore.Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
-using BasedTechStore.Application.DTOs.Identity;
 
 namespace BasedTechStore.Infrastructure.Services.Identity
 {
@@ -31,6 +29,16 @@ namespace BasedTechStore.Infrastructure.Services.Identity
             _configuration = configuration;
             _mapper = mapper;
         }
+        public string GetUserId(ClaimsPrincipal user)
+        {
+            if (!user.Identity.IsAuthenticated) return null;
+
+            var claimIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)
+                ?? user.FindFirst(JwtRegisteredClaimNames.Sub)
+                ?? user.FindFirst("sub");
+
+            return claimIdClaim?.Value;
+        }
 
         public async Task<string> GenerateJwtTokenAsync(AppUser user)
         {
@@ -45,9 +53,15 @@ namespace BasedTechStore.Infrastructure.Services.Identity
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("FullName", user.FullName)
+
+                new Claim("UserName", user.UserName ?? ""),
+                new Claim("FullName", user.FullName ?? ""),
+
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
+                new Claim(ClaimTypes.Name, user.UserName ?? "")
             };
 
             var jwtToken = new JwtSecurityToken(

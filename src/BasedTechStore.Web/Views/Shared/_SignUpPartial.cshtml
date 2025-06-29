@@ -1,6 +1,4 @@
-﻿@model BasedTechStore.Application.DTOs.Identity.Request.SignUpRequest
-
-<div class="modal fade" id="regModal" tabindex="-1" aria-labelledby="regModalTitle" aria-hidden="true">
+﻿<div class="modal fade" id="regModal" tabindex="-1" aria-labelledby="regModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -8,18 +6,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                @if (ViewData.ModelState["SignUp"]?.Errors?.Count > 0)
-                {
-                    <div class="alert alert-danger">
-                        @foreach (var error in ViewData.ModelState["SignUp"].Errors)
-                        {
-                            <div>@error.ErrorMessage</div>
-                        }
-                    </div>
-                }
-                @using (Html.BeginForm("SignUp", "Auth", FormMethod.Post, new { @class = "form-horizontal" }))
-                {
+                <div id="signUpErrors" class="d-none"></div>
+
+                <form id="signUpForm">
                     @Html.AntiForgeryToken()
+
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" id="FullName" name="FullName" placeholder="Full name" required>
                         <label for="FullName">ПІБ</label>
@@ -37,7 +28,8 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" name="Close">Закрити</button>
                         <button type="submit" class="btn btn-primary">Зареєструватися</button>
                     </div>
-                }
+                </form>
+                    
             </div>
         </div>
     </div>
