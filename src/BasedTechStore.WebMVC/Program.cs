@@ -8,15 +8,11 @@ using BasedTechStore.Infrastructure.Services.Carts;
 using BasedTechStore.Infrastructure.Services.Identity;
 using BasedTechStore.Infrastructure.Services.Products;
 using BasedTechStore.Infrastructure.Services.Specifications;
-using BasedTechStore.Web.Middlewares;
+using BasedTechStore.WebЬМVC.Middlewares;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,11 +22,10 @@ builder.Services.AddControllersWithViews()
     {
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton<JwtSecurityTokenHandler>();
 
@@ -52,6 +47,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
              return Task.CompletedTask;
          };
      });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -76,6 +73,17 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISpecificationService, SpecificationService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IManagerSeeder, ManagerSeeder>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReact", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServerConnection")));
@@ -110,6 +118,8 @@ app.UseStaticFiles();
 app.UseMiddleware<JwtCookieMiddleware>();
 
 app.UseRouting();
+
+app.UseCors("AllowReact");
 
 app.UseAuthentication();
 app.UseAuthorization();

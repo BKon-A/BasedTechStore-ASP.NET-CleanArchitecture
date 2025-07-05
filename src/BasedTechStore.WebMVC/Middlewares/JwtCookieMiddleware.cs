@@ -2,7 +2,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
-namespace BasedTechStore.Web.Middlewares
+namespace BasedTechStore.WebЬМVC.Middlewares
 {
     public class JwtCookieMiddleware
     {

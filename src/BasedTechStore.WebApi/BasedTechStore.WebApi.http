@@ -1,0 +1,6 @@
+@BasedTechStore.WebApi_HostAddress = http://localhost:5064
+
+GET {{BasedTechStore.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
