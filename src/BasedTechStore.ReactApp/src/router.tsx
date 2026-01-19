@@ -7,7 +7,7 @@ import { ErrorPage } from './pages/errors/ErrorPage';
 import { HomePage } from './pages/home/HomePage';
 import { ProductsPage } from './pages/products/ProductsPage';
 import { WishlistPage } from './pages/wishlist/WishlistPage';
-import { AdminPanelPage } from './pages/admin-panel/AdminPanelPage';
+import { AdminDashboard } from './pages/admin-panel/AdminDashboard';
 import { ProfilePage } from './pages/profile/ProfilePage';
 
 export const router = createBrowserRouter([
@@ -25,8 +25,8 @@ export const router = createBrowserRouter([
                 element: <ProfilePage />,
             },
             {
-                path: ROUTES.ADMIN_PANEL.PANEL,
-                element: <AdminPanelPage />, // This should be the admin panel page, but currently using ProfilePage as a placeholder
+                path: ROUTES.ADMIN_DASHBOARD.DASHBOARD,
+                element: <AdminDashboard />,
             },
             {
                 path: ROUTES.PRODUCTS,

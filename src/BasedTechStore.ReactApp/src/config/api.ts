@@ -1,6 +1,6 @@
 // API configuration
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:7001/api',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:7250/api',
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
@@ -10,29 +10,38 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   // Auth endpoints
   AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    LOGOUT: '/auth/logout',
-    REFRESH: '/auth/refresh-token',
-    PROFILE: '/auth/profile',
+    SIGN_IN: '/auth/signIn',
+    SIGN_UP: '/auth/signUp',
+    SIGN_OUT: '/auth/signOut',
+    REFRESH: '/auth/refresh',
+    CHECK: '/auth/check',
   },
   
+  PROFILE: {
+    HOME: '/profile/home',
+    ADMIN_DASHBOARD: '/profile/admin/dashboard',
+  },
+
   // Products endpoints
   PRODUCTS: {
-    BASE: '/products',
+    BASE: '/products/all',
     BY_ID: (id: string) => `/products/${id}`,
     BY_CATEGORY: (categoryId: string) => `/products/category/${categoryId}`,
     BY_SUBCATEGORY: (subcategoryId: string) => `/products/subcategory/${subcategoryId}`,
     SEARCH: '/products/search',
-    FILTER: '/products/filter',
+    FILTER: '/products/filtered',
+    // CATEGORIES: '/products/categories',
+    // CATEGORY_BY_ID: (id: string) => `/products/categories/${id}`,
+    // SUBCATEGORIES_BY_CATEGORYID: (categoryId: string) => `/products/categories/${categoryId}/subcategories`,
   },
-  
-  // Categories endpoints
+
   CATEGORIES: {
     BASE: '/categories',
+    ALL: '/categories/all',
     BY_ID: (id: string) => `/categories/${id}`,
-    WITH_SUBCATEGORIES: '/categories/with-subcategories',
-    SUBCATEGORIES: (id: string) => `/categories/${id}/subcategories`,
+    SUBCATEGORIES: '/categories/subcategories',
+    SUBCATEGORY_BY_ID: (id: string) => `/categories/subcategories/${id}`,
+    SUBCATEGORIES_BY_CATEGORYID: (categoryId: string) => `/categories/${categoryId}/subcategories`,
   },
   
   // Cart endpoints

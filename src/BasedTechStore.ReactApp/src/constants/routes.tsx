@@ -7,15 +7,21 @@ export const ROUTES = {
     REGISTER: '/signup',
     LOGOUT: '/logout',
     
-    // Products routes
+    // ==== Start product routes section ====
+    GET_ALL_PRODUCTS: '/products/all',
+    GET_PRODUCT_BY_ID: (id: string) => `/products/${id}`,
+    GET_PRODUCTS_BY_CATEGORY: (categoryId: string) => `/products/category/${categoryId}`,
+    GET_PRODUCTS_BY_SUBCATEGORY: (subcategoryId: string) => `/products/subcategory/${subcategoryId}`,
+    ADD_PRODUCT: '/products/add',
+    UPDATE_PRODUCT: (id: string) => `/products/update/${id}`,
+    DELETE_PRODUCT: (id: string) => `/products/delete/${id}`,
     PRODUCTS: '/products',
     PRODUCT_DETAILS: (id: string) => `/products/${id}`,
     PRODUCT_SEARCH: '/products/search',
-    
-    // Categories routes
-    CATEGORIES: '/categories',
-    SUBCATEGORIES: (id: string, subId: string) => `/categories/${id}/subcategories/${subId}`,
-    
+    CATEGORIES: '/products/categories',
+    SUBCATEGORIES: (id: string, subId: string) => `products/categories/${id}/subcategories/${subId}`,
+    // ---- End product routes section ----
+
     // Cart routes
     CART: '/cart',
     
@@ -32,8 +38,8 @@ export const ROUTES = {
     PROFILE: '/profile',
 
     // Admin routes
-    ADMIN_PANEL: {
-        PANEL: '/admin-panel',
+    ADMIN_DASHBOARD: {
+        DASHBOARD: '/admin-panel',
         PRODUCTS: '/admin-panel/products',
         CATEGORIES: '/admin-panel/categories',
         SPECIFICATIONS: '/admin-panel/specifications',

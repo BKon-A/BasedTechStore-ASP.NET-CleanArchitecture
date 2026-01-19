@@ -1,19 +1,27 @@
 {
   "name": "basedtechstore-reactapp",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0-alpha",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:docker": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:fix": "eslint . --fix",
+    "preview": "vite preview",
+    "start": "vite --port 3000",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@types/http-proxy": "^1.17.16",
     "bootstrap": "^5.3.7",
     "bootstrap-icons": "^1.13.1",
+    "http": "^0.0.1-security",
+    "http-proxy": "^1.18.1",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",
+    "react-bootstrap-icons": "^1.11.6",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.3"
   },
@@ -27,7 +35,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
-    "typescript": "~5.8.3",
+    "typescript": "^5.8.3",
     "typescript-eslint": "^8.34.1",
     "vite": "^7.0.0"
   }

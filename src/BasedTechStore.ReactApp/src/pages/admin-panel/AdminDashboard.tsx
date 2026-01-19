@@ -1,4 +1,4 @@
-export const AdminPanelPage = () => {
+export const AdminDashboard = () => {
     return (
         <div className="adminpanel-page">
             <h1>Адмін панель</h1>
