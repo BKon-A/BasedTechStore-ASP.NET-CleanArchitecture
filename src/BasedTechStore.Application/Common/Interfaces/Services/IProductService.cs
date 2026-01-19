@@ -26,8 +26,8 @@ namespace BasedTechStore.Application.Common.Interfaces.Services
         Task<ProductDto?> GetProductByIdAsync(Guid productId);
         Task<ProductDetailsDto> GetProductDetailsByProductIdAsync(Guid productId);
         Task<List<ProductDto>> GetFilteredProductsAsync(decimal? minPrice, decimal? maxPrice,
-            List<Guid> categoryIds, List<string> brands, Dictionary<Guid, (string Min, string Max)> specificationFilters,
-            List<Guid> subcategoryIds = null);
+            List<Guid>? categoryIds, List<string>? brands, Dictionary<Guid, (string Min, string Max)>? specificationFilters,
+            List<Guid>? subcategoryIds = null);
 
         Task<string?> UploadProductImageAsync(IFormFile image);
 

@@ -2,7 +2,6 @@
 using BasedTechStore.Application.DTOs.Cart;
 using BasedTechStore.Application.DTOs.Categories;
 using BasedTechStore.Application.DTOs.Identity;
-using BasedTechStore.Application.DTOs.Identity.Request;
 using BasedTechStore.Application.DTOs.Identity.Response;
 using BasedTechStore.Application.DTOs.Product;
 using BasedTechStore.Application.DTOs.Specifications;
@@ -19,7 +18,7 @@ namespace BasedTechStore.Application.Mapping
         public MappingProfile()
         {
             // Mapping registration
-            CreateMap<SignUpRequest, AppUser>()
+            CreateMap<SignUpDto, AppUser>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email));
 
             // Mapping AppUser -> AppUserDto
