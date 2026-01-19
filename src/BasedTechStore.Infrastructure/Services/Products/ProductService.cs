@@ -177,8 +177,8 @@ namespace BasedTechStore.Infrastructure.Services.Products
         }
 
         public async Task<List<ProductDto>> GetFilteredProductsAsync(decimal? minPrice, decimal? maxPrice,
-            List<Guid> categoryIds, List<string> brands, Dictionary<Guid, (string Min, string Max)> specificationFilters, 
-            List<Guid> subcategoryIds = null)
+            List<Guid>? categoryIds, List<string>? brands, Dictionary<Guid, (string Min, string Max)>? specificationFilters, 
+            List<Guid>? subcategoryIds = null)
         {
             var query = _context.Products.AsQueryable();
 
@@ -200,7 +200,11 @@ namespace BasedTechStore.Infrastructure.Services.Products
             }
             if (brands != null && brands.Any())
             {
-                query = query.Where(p => brands.Contains(p.Brand));
+                var notNullBrands = brands.Where(b => !string.IsNullOrEmpty(b)).ToList();
+                if (notNullBrands.Any())
+                { 
+                    query = query.Where(p => p.Brand != null && notNullBrands.Contains(p.Brand));
+                }
             }
 
             var products = await query.ToListAsync();
@@ -212,10 +216,16 @@ namespace BasedTechStore.Infrastructure.Services.Products
                     .Where(ps => productIds.Contains(ps.ProductId))
                     .ToListAsync();
 
+                // Pre-load for avoid multiple DB calls in the loop
+                var specTypeIds = specificationFilters.Keys.ToList();
+                var specTypes = await _context.SpecificationTypes
+                    .Where(st => specTypeIds.Contains(st.Id))
+                    .ToDictionaryAsync(st => st.Id, st => st.Name);
+
                 foreach (var filter in specificationFilters)
                 {
                     var specTypeId = filter.Key;
-                    var specTypeName = (await _context.SpecificationTypes.FindAsync(specTypeId))?.Name ?? "Unknown";
+                    var specTypeName = specTypes.TryGetValue(specTypeId, out var name) ? name : "Unknown";
                     var minValue = filter.Value.Min;
                     var maxValue = filter.Value.Max;
 

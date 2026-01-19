@@ -158,5 +158,21 @@ namespace BasedTechStore.Infrastructure.Persistence
         {
             return base.SaveChangesAsync(cancellationToken);
         }
+        public Task<bool> CanConnectAsync(CancellationToken cancellationToken = default)
+        {
+            return Database.CanConnectAsync(cancellationToken);
+        }
+        public Task MigrateAsync(CancellationToken cancellationToken = default)
+        {
+            return Database.MigrateAsync(cancellationToken);
+        }
+        public Task<IEnumerable<string>> GetPendingMigrationsAsync(CancellationToken cancellationToken = default)
+        {
+            return Database.GetPendingMigrationsAsync(cancellationToken);
+        }
+        public Task<IEnumerable<string>> GetAppliedMigrationsAsync(CancellationToken cancellationToken = default)
+        {
+            return Database.GetAppliedMigrationsAsync(cancellationToken);
+        }
     }
 }

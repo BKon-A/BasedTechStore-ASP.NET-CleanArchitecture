@@ -1,4 +1,4 @@
-using BasedTechStore.Application.Common.Interfaces.Persistence.Seed;
+﻿using BasedTechStore.Application.Common.Interfaces.Persistence.Seed;
 using BasedTechStore.Application.Common.Interfaces.Services;
 using BasedTechStore.Application.Mapping;
 using BasedTechStore.Domain.Entities.Identity;
@@ -15,15 +15,21 @@ using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using BasedTechStore.Common.Middlewares;
+using BasedTechStore.Common.Mapping;
+using Microsoft.AspNetCore.DataProtection;
+using BasedTechStore.Application.Common.Interfaces.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+{
+    options.ModelBinderProviders.Insert(0, new BasedTechStore.Common.Utilities.QueryModelBinderProvider());
+})
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.KebabCaseLower;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
@@ -63,8 +69,50 @@ builder.Services.AddSwaggerGen(c =>
 // Add CORS using Common extensions
 builder.Services.AddCommonCors(builder.Configuration);
 
+builder.Services.AddHttpsRedirection(options =>
+{
+    if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")
+    {
+        options.HttpsPort = null; // Standard HTTPS port
+    }
+    else
+    {
+        options.HttpsPort = 7250; // Local development HTTPS port
+    }
+});
+
+builder.Services.AddDataProtection(option =>
+{
+   option.ApplicationDiscriminator = "BasedTechStore.WebApi";
+})
+    .PersistKeysToFileSystem(new DirectoryInfo("/app/data-protection-keys"))
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
+
 // Add Authentication using Common extensions
 builder.Services.AddAuthorization();
+
+// Add Database
+var connectionString = builder.Configuration.GetConnectionString("SqlServerConnection");
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseSqlServer(connectionString, sqlServerOptions =>
+    {
+        sqlServerOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null
+        );
+
+        sqlServerOptions.CommandTimeout(120);
+        sqlServerOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
+    });
+
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
+    }
+});
 
 // Add Identity
 builder.Services.AddIdentity<AppUser, AppUserRole>(options =>
@@ -87,22 +135,24 @@ builder.Services.AddIdentity<AppUser, AppUserRole>(options =>
 .AddApiEndpoints();
 
 // Add AutoMapper
-builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+builder.Services.AddAutoMapper(config =>
+{
+    config.AddProfile(typeof(MappingProfile));
+    config.AddProfile(typeof(ViewModelMappingProfile));
+});
 
 // Add JWT Token Handler
 builder.Services.AddSingleton<JwtSecurityTokenHandler>();
 
 // Add Application Services
+builder.Services.AddScoped<IAppDbContext>(provider => provider.GetRequiredService<AppDbContext>());
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISpecificationService, SpecificationService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 builder.Services.AddScoped<IManagerSeeder, ManagerSeeder>();
-
-// Add Database
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServerConnection")));
 
 // Add Caching
 builder.Services.AddMemoryCache();
@@ -114,12 +164,21 @@ builder.Services.AddLogging();
 // Build the app
 var app = builder.Build();
 
-// Database seeding in development
-if (app.Environment.IsDevelopment())
+var logger = app.Services.GetService<ILogger<Program>>();
+var connectionStringLog = app.Configuration.GetConnectionString("SqlServerConnection");
+
+logger?.LogInformation("🔍 Configuration Sources:");
+foreach (var source in builder.Configuration.Sources)
 {
-    using var scope = app.Services.CreateScope();
-    var seeder = scope.ServiceProvider.GetRequiredService<IManagerSeeder>();
-    await seeder.SeedManagerAsync();
+    logger?.LogInformation("  - {Source}: {Type}", source, source.GetType().Name);
+}
+logger?.LogInformation("🔍 Connection String Source: {Source}",
+    string.IsNullOrEmpty(connectionStringLog) ? "NOT FOUND" : "Found");
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
+    await dbInitializer.InitializeDbAsync(app.Services, app.Environment);
 }
 
 // Configure the HTTP request pipeline
@@ -140,15 +199,19 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-
-app.UseMiddleware<JwtCookieMiddleware>();
+// HTTPS redirection - disable in containerized environments
+if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") != "true")
+{
+    app.UseHttpsRedirection();
+}
 
 // Use CORS - must be before authentication
 var corsPolicy = app.Environment.IsDevelopment() 
     ? AppConstants.CorsPolicy.AllowMultipleFrontends 
     : AppConstants.CorsPolicy.Production;
 app.UseCors(corsPolicy);
+
+app.UseMiddleware<JwtCookieMiddleware>();
 
 // Authentication & Authorization
 app.UseAuthentication();

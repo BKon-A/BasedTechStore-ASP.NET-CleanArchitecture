@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using BasedTechStore.Application.Common.Interfaces.Services;
-using BasedTechStore.Application.DTOs.Identity.Request;
 using BasedTechStore.Application.DTOs.Identity.Response;
 using BasedTechStore.Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
+using BasedTechStore.Application.DTOs.Identity;
 
 namespace BasedTechStore.Infrastructure.Services.Identity
 {
@@ -102,7 +102,7 @@ namespace BasedTechStore.Infrastructure.Services.Identity
             return _configuration["JwtSettings:ExpirationMinutes"];
         }
 
-        public async Task<AuthenticationResponse> SignInAsync(SignInRequest signInRequest)
+        public async Task<AuthenticationResponse> SignInAsync(SignInDto signInRequest)
         {
             var user = await _userManager.FindByEmailAsync(signInRequest.Email);
             if (user == null)
@@ -120,7 +120,7 @@ namespace BasedTechStore.Infrastructure.Services.Identity
             return AuthenticationResponse.CreateSuccess(jwtToken);
         }
 
-        public async Task<AuthenticationResponse> SignUpAsync(SignUpRequest signUpRequest)
+        public async Task<AuthenticationResponse> SignUpAsync(SignUpDto signUpRequest)
         {
             var existingUser = await _userManager.FindByEmailAsync(signUpRequest.Email);
             if (existingUser != null)
