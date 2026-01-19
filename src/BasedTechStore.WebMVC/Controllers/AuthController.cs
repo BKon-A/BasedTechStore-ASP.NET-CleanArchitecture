@@ -1,6 +1,5 @@
 ﻿using BasedTechStore.Application.Common.Interfaces.Services;
 using BasedTechStore.Application.DTOs.Identity;
-using BasedTechStore.Application.DTOs.Identity.Request;
 using BasedTechStore.Web.Extentions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +18,7 @@ namespace BasedTechStore.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SignIn(SignInRequest signInRequest)
+        public async Task<IActionResult> SignIn(SignInDto signInRequest)
         {
             if (Request.IsAjaxRequest())
             {
@@ -64,7 +63,7 @@ namespace BasedTechStore.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SignUp(SignUpRequest signUpRequest)
+        public async Task<IActionResult> SignUp(SignUpDto signUpRequest)
         {
             if (Request.IsAjaxRequest())
             {

@@ -3,10 +3,10 @@ using BasedTechStore.Application.DTOs.Cart;
 using BasedTechStore.Application.DTOs.Categories;
 using BasedTechStore.Application.DTOs.Product;
 using BasedTechStore.Application.DTOs.Specifications;
-using BasedTechStore.Web.ViewModels.Cart;
-using BasedTechStore.Web.ViewModels.Categories;
-using BasedTechStore.Web.ViewModels.Products;
-using BasedTechStore.Web.ViewModels.Specifications;
+using BasedTechStore.Common.ViewModels.Cart;
+using BasedTechStore.Common.ViewModels.Categories;
+using BasedTechStore.Common.ViewModels.Products;
+using BasedTechStore.Common.ViewModels.Specifications;
 
 namespace BasedTechStore.Application.Mapping
 {

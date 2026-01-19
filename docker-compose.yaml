@@ -1,0 +1,114 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: basedtechstore-mssql
+    env_file:
+      - ./.env
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: $MSSQL_SA_PASSWORD
+      MSSQL_DB: $MSSQL_DB
+      MSSQL_USER: $MSSQL_USER
+      MSSQL_PID: Developer
+      MSSQL_PASSWORD: $MSSQL_PASSWORD
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+      - ./backup:/var/opt/mssql/backup:ro
+    networks:
+      - basedtechstore-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P ${MSSQL_SA_PASSWORD} -Q 'SELECT 1' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+
+  webapi:
+    build:
+      context: ./src
+      dockerfile: BasedTechStore.WebApi/Dockerfile
+    container_name: basedtechstore-webapi
+    env_file:
+      - path: ./.env.web
+        required: true
+    environment:
+      CONNECTIONSTRINGS_SQLSERVERCONNECTION: "Server=mssql,1433;Database=BasedTechStore;User Id=sa;Password=MyStrong!Passw0rd123;TrustServerCertificate=true;MultipleActiveResultSets=true;Connection Timeout=60;ConnectRetryCount=3;ConnectRetryInterval=10;"
+      DOTNET_RUNNING_IN_CONTAINER: "true"
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: "Information"
+    ports:
+      - "7250:80"
+    depends_on:
+      mssql:
+        condition: service_healthy
+    networks:
+      - basedtechstore-network
+    volumes:
+      - ./uploads:/app/uploads
+      - dataprotection_keys:/app/data-protection-keys
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: on-failure
+
+  react-app:
+    build:
+      context: ./src/BasedTechStore.ReactApp
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: "http://localhost:7250/api"
+    container_name: basedtechstore-react
+    env_file:
+      - path: ./.env.react
+        required: true
+    ports:
+      - "3000:3000"
+    depends_on:
+      - webapi
+    networks:
+      - basedtechstore-network
+    volumes:
+      - node_modules:/app/node_modules
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: basedtechstore-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - webapi
+      - react-app
+    networks:
+      - basedtechstore-network
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./uploads:/var/www/uploads
+    profiles:
+      - production
+
+  redis:
+    image: redis:7-alpine
+    container_name: basedtechstore-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - basedtechstore-network
+    volumes:
+      - redis_data:/data
+    profiles:
+      - cache
+
+networks:
+  basedtechstore-network:
+    driver: bridge
+
+volumes:
+  mssql_data:
+  redis_data:
+  node_modules:
+  dataprotection_keys:

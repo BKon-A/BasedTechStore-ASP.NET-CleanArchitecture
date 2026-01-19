@@ -1,5 +1,5 @@
 ﻿<!-- BasedTechStore.Web/Views/Shared/_ManageSpecificationsPartial.cshtml -->
-@using BasedTechStore.Web.ViewModels.Specifications
+@using BasedTechStore.Common.ViewModels.Specifications
 @model ManageSpecificationsVM
 
 <form asp-action="SaveAllSpecifications" asp-controller="AdminPanel" method="post" id="saveSpecificationsForm">
@@ -183,7 +183,7 @@
     </div>
 </div>
 
-@await Component.InvokeAsync("InfoModal", new BasedTechStore.Web.ViewModels.Modals.InfoModalViewModel
+@await Component.InvokeAsync("InfoModal", new BasedTechStore.Common.ViewModels.Modals.InfoModalViewModel
 {
     Id = "specificationsWarningOnLeave",
     Title = "Незбережені зміни",

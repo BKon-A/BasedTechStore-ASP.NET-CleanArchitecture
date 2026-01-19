@@ -1,4 +1,4 @@
-﻿@using BasedTechStore.Web.ViewModels.Categories
+﻿@using BasedTechStore.Common.ViewModels.Categories
 @model ManageCategoriesVM
 
 <form asp-action="SaveCategories" asp-controller="AdminPanel" method="post" id="saveCategoriesForm">
@@ -86,7 +86,7 @@
     </div>
 </div>
 
-@await Component.InvokeAsync("InfoModal", new BasedTechStore.Web.ViewModels.Modals.InfoModalViewModel
+@await Component.InvokeAsync("InfoModal", new BasedTechStore.Common.ViewModels.Modals.InfoModalViewModel
 {
     Id = "categoriesWarningOnLeave",
     Title = "Незбережені зміни",

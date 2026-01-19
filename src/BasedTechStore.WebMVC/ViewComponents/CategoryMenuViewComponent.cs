@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using BasedTechStore.Application.Common.Interfaces.Services;
-using BasedTechStore.Web.ViewModels.Categories;
+using BasedTechStore.Common.ViewModels.Categories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BasedTechStore.Web.ViewComponents

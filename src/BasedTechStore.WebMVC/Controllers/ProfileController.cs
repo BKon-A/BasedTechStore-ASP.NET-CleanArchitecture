@@ -1,5 +1,5 @@
 ﻿using BasedTechStore.Application.Common.Interfaces.Services;
-using BasedTechStore.Web.ViewModels;
+using BasedTechStore.Common.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;

@@ -61,7 +61,11 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddLogging();
 
-builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly, typeof(ViewModelMappingProfile).Assembly);
+builder.Services.AddAutoMapper(config =>
+{
+    config.AddProfile(typeof(MappingProfile));
+    config.AddProfile(typeof(ViewModelMappingProfile));
+});
 
 builder.Services.AddIdentity<AppUser, AppUserRole>()
     .AddEntityFrameworkStores<AppDbContext>()

@@ -1,4 +1,4 @@
-﻿using BasedTechStore.Web.ViewModels.Modals;
+﻿using BasedTechStore.Common.ViewModels.Modals;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BasedTechStore.Web.ViewComponents

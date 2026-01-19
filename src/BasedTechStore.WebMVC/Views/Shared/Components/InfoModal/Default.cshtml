@@ -1,12 +1,12 @@
-﻿@model BasedTechStore.Web.ViewModels.Modals.InfoModalViewModel
+﻿@model BasedTechStore.Common.ViewModels.Modals.InfoModalViewModel
 
 @{
     var modalSizeClass = Model.Size switch
     {
-        BasedTechStore.Web.ViewModels.Modals.ModalSize.Small => "modal-sm",
-        BasedTechStore.Web.ViewModels.Modals.ModalSize.Large => "modal-lg",
-        BasedTechStore.Web.ViewModels.Modals.ModalSize.ExtraLarge => "modal-xl",
-        BasedTechStore.Web.ViewModels.Modals.ModalSize.Fullscreen => "modal-fullscreen",
+        BasedTechStore.Common.ViewModels.Modals.ModalSize.Small => "modal-sm",
+        BasedTechStore.Common.ViewModels.Modals.ModalSize.Large => "modal-lg",
+        BasedTechStore.Common.ViewModels.Modals.ModalSize.ExtraLarge => "modal-xl",
+        BasedTechStore.Common.ViewModels.Modals.ModalSize.Fullscreen => "modal-fullscreen",
         _ => ""
     };
 

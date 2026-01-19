@@ -1,4 +1,4 @@
-﻿@using BasedTechStore.Web.ViewModels.Products
+﻿@using BasedTechStore.Common.ViewModels.Products
 @model ManageProductsVM
 
 <form asp-action="SaveProducts" asp-controller="AdminPanel" method="post" id="saveProductsForm">
@@ -149,7 +149,7 @@
     </div>
 </div>
 
-@await Component.InvokeAsync("InfoModal", new BasedTechStore.Web.ViewModels.Modals.InfoModalViewModel
+@await Component.InvokeAsync("InfoModal", new BasedTechStore.Common.ViewModels.Modals.InfoModalViewModel
 {
     Id = "warningOnLeave",
     Title = "Незбережені зміни",

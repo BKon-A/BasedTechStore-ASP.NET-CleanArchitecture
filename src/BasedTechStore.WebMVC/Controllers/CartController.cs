@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using BasedTechStore.Application.Common.Interfaces.Services;
 using BasedTechStore.Web.Extentions;
-using BasedTechStore.Web.ViewModels.Cart;
-using BasedTechStore.Web.ViewModels.PendingChanges;
+using BasedTechStore.Common.ViewModels.Cart;
+using BasedTechStore.Common.ViewModels.PendingChanges;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;

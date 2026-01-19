@@ -2,8 +2,8 @@
 using BasedTechStore.Application.Common.Interfaces.Services;
 using BasedTechStore.Application.DTOs.Product;
 using BasedTechStore.Application.DTOs.Specifications;
-using BasedTechStore.Web.ViewModels.Categories;
-using BasedTechStore.Web.ViewModels.Products;
+using BasedTechStore.Common.ViewModels.Categories;
+using BasedTechStore.Common.ViewModels.Products;
 using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
 
