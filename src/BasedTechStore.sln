@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11109.219 d18.0-oob
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasedTechStore.Domain", "BasedTechStore.Domain\BasedTechStore.Domain.csproj", "{167B36C5-E499-4F4D-864D-526410D9D4D5}"
 EndProject
@@ -12,27 +12,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasedTechStore.WebMVC", "BasedTechStore.WebMVC\BasedTechStore.WebMVC.csproj", "{F73C18DD-6BFE-3AE1-206B-C2DA1A57ACE9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasedTechStore.WebApi", "BasedTechStore.WebApi\BasedTechStore.WebApi.csproj", "{A16BB55A-87AF-8D5F-E12C-50090EB9E1BF}"
-EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "BasedTechStore.ReactApp", "BasedTechStore.ReactApp\", "{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}"
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.8"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_45109"
-		Debug.AspNetCompiler.PhysicalPath = "BasedTechStore.ReactApp\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_45109\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_45109"
-		Release.AspNetCompiler.PhysicalPath = "BasedTechStore.ReactApp\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_45109\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "45109"
-		SlnRelativePath = "BasedTechStore.ReactApp\"
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasedTechStore.Common", "BasedTechStore.Common\BasedTechStore.Common.csproj", "{46A2034F-B7B0-4360-83B7-58824AA595A4}"
 EndProject
@@ -108,18 +87,6 @@ Global
 		{A16BB55A-87AF-8D5F-E12C-50090EB9E1BF}.Release|x64.Build.0 = Release|Any CPU
 		{A16BB55A-87AF-8D5F-E12C-50090EB9E1BF}.Release|x86.ActiveCfg = Release|Any CPU
 		{A16BB55A-87AF-8D5F-E12C-50090EB9E1BF}.Release|x86.Build.0 = Release|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Debug|x64.Build.0 = Debug|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Debug|x86.Build.0 = Debug|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Release|Any CPU.Build.0 = Debug|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Release|x64.ActiveCfg = Debug|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Release|x64.Build.0 = Debug|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Release|x86.ActiveCfg = Debug|Any CPU
-		{4EFB2B9E-AD03-0B3A-46A9-4361257D4D0E}.Release|x86.Build.0 = Debug|Any CPU
 		{46A2034F-B7B0-4360-83B7-58824AA595A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{46A2034F-B7B0-4360-83B7-58824AA595A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46A2034F-B7B0-4360-83B7-58824AA595A4}.Debug|x64.ActiveCfg = Debug|Any CPU
