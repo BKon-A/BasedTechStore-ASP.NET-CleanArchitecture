@@ -1,40 +1,23 @@
-﻿using BasedTechStore.Application.DTOs.Categories;
-using BasedTechStore.Application.DTOs.Product;
-using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BasedTechStore.Application.Common.Models;
+using BasedTechStore.Application.Common.Queries;
+using BasedTechStore.Application.DTOs.Products;
 
 namespace BasedTechStore.Application.Common.Interfaces.Services
 {
     public interface IProductService
     {
-        Task<List<CategoryDto>> GetAllCategoriesAsync();
-        Task<List<CategoryDto>> GetCategoriesWithSubCategoriesAsync();
-        Task<List<CategoryDto>> SaveCategoriesAsync(List<CategoryDto> categories);
-        Task<List<SubCategoryDto>> GetAllSubCategoriesAsync();
-        Task<List<SubCategoryDto>> GetSubCategoriesByCategoryIdAsync(Guid categoryId);
-        Task<SubCategoryDto?> GetSubCategoryByIdAsync(Guid subcategoryId);
-        Task<string?> GetSubCategoryNameByIdAsync(Guid subcategoryId);
+        Task<ProductDto> GetByIdAsync(Guid productId);
+        Task<IEnumerable<ProductDto>> GetAllAsync();
+        Task<IEnumerable<ProductDto>> GetFeaturedAsync(int count);
+        Task<IEnumerable<ProductDto>> GetRelatedAsync(Guid productId, int count);
+        Task<IEnumerable<ProductDto>> GetByCategoryIdAsync(Guid categoryId);
+        Task<IEnumerable<ProductDto>> GetBySubCategoryIdAsync(Guid subCategoryId);
+        Task<ProductDto> CreateAsync(CreateProductDto dto);
+        Task<ProductDto> UpdateAsync(Guid productId, UpdateProductDto dto);
+        Task UpdateStockAsync(Guid productId, int quantity);
+        Task DeleteAsync(Guid productId);
 
-        Task<List<ProductDto>> GetAllProductsAsync();
-        Task<List<ProductDto>> GetProductsBySubCategoryAsync(Guid? id);
-        Task<List<ProductDto>> GetProductsByCategoryIdAsync(Guid id);
-        Task<List<ProductDto>> SaveProductsAsync(List<ProductDto> productDtos);
-        Task<ProductDto?> GetProductByIdAsync(Guid productId);
-        Task<ProductDetailsDto> GetProductDetailsByProductIdAsync(Guid productId);
-        Task<List<ProductDto>> GetFilteredProductsAsync(decimal? minPrice, decimal? maxPrice,
-            List<Guid>? categoryIds, List<string>? brands, Dictionary<Guid, (string Min, string Max)>? specificationFilters,
-            List<Guid>? subcategoryIds = null);
-
-        Task<string?> UploadProductImageAsync(IFormFile image);
-
-        Task<int> DeleteUnusedImagesAsync(List<string> imageUrls);
-        Task<int> CleanupAllUnusedImagesAsync();
-
-        Task UpdateProductAsync(ProductDto productDto);
-        Task DeleteProductAsync(Guid productId);
+        Task<PagedResult<ProductDto>> SearchAsync(ProductSearchCriteria criteria);
+        Task<ProductFiltersDto> GetAvailableFiltersAsync(Guid? categoryId = null);
     }
 }

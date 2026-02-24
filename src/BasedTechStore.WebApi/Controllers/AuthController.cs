@@ -1,361 +1,179 @@
 using AutoMapper;
 using BasedTechStore.Application.Common.Interfaces.Services;
 using BasedTechStore.Application.DTOs.Identity;
+using BasedTechStore.Application.DTOs.Identity.Requests;
+using BasedTechStore.Application.DTOs.Identity.Responses;
 using BasedTechStore.Common.Constants;
 using BasedTechStore.Common.Models.Api;
 using BasedTechStore.Common.ViewModels.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Newtonsoft.Json.Linq;
 
 [ApiController]
 [Route(ApiRoutes.Auth.Base)]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly ILogger<AuthController> _logger;
-    private readonly IMapper _mapper;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(IAuthService authService, ILogger<AuthController> logger,
-        IMapper mapper)
+    public AuthController(IAuthService authService, IConfiguration configuration)
     {
         _authService = authService;
-        _logger = logger;
-        _mapper = mapper;
+        _configuration = configuration;
     }
 
     [HttpPost(ApiRoutes.Auth.SignIn)]
-    public async Task<IActionResult> SignIn([FromBody] SignInVM signInVM)
+    public async Task<ActionResult<ApiResponse<AuthTokenResponse>>> SignIn([FromBody] SignInDto dto)
     {
-        try
-        {
-            if (!ModelState.IsValid)
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var (accessToken, refreshToken) = await _authService.SignInAsync(dto, ipAddress);
+
+        SetRefreshTokenCookie(refreshToken);
+
+        return Ok(ApiResponse<AuthTokenResponse>.Success(
+            new AuthTokenResponse
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage).ToList();
-
-                return BadRequest(new ApiResponse<string>
-                {
-                    IsSuccess = false,
-                    Message = "Validation errors occurred.",
-                    Errors = errors,
-                    StatusCode = StatusCodes.Status400BadRequest
-                });
-            }
-
-            var signInRequest = _mapper.Map<SignInDto>(signInVM);
-            var signInResponse = await _authService.SignInAsync(signInRequest);
-
-            if (!signInResponse.IsSuccess)
-            {
-                return Unauthorized(new ApiResponse<string>
-                {
-                    IsSuccess = false,
-                    Message = "Authentication failed.",
-                    Errors = signInResponse.Errors?.ToList() ?? new List<string> { "Unknown error occurred." },
-                    StatusCode = StatusCodes.Status401Unauthorized
-                });
-            }
-
-            if (!double.TryParse(await _authService.GetJwtExpirationMinutes(), out var expirationMinutes))
-                expirationMinutes = 60;
-
-            Response.Cookies.Append("access-token", signInResponse.Token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(expirationMinutes),
-                Path = "/"
-            });
-
-            return Ok(new ApiResponse<AuthResponseVM>
-            {
-                Data = new AuthResponseVM
-                {
-                    Token = signInResponse.Token,
-                    ExpiresIn = (int)expirationMinutes * 60
-                },
-                IsSuccess = true,
-                Message = "Authentication successful.",
-                StatusCode = StatusCodes.Status200OK
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred during sign-in.");
-            return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<string>
-            {
-                IsSuccess = false,
-                Message = "An internal server error occurred.",
-                Errors = new List<string> { ex.Message },
-                StatusCode = StatusCodes.Status500InternalServerError
-            });
-        }
+                Token = accessToken,
+                TokenType = "Bearer",
+                ExpiresIn = GetAccessTokenExpirySeconds()
+            },
+            "Authentication successful"
+        ));
     }
 
     [HttpPost(ApiRoutes.Auth.SignUp)]
-    public async Task<IActionResult> SignUp([FromBody] SignUpVM signUpVM)
+    public async Task<ActionResult<ApiResponse<AuthTokenResponse>>> SignUp([FromBody] SignUpDto dto)
     {
-        try
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage).ToList();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var (accessToken, refreshToken) = await _authService.SignUpAsync(dto, ipAddress);
 
-                return BadRequest(new ApiResponse<string>
+        SetRefreshTokenCookie(refreshToken);
+
+        return CreatedAtAction(
+            nameof(GetCurrentUser),
+            null,
+            ApiResponse<AuthTokenResponse>.Success(
+                new AuthTokenResponse
                 {
-                    IsSuccess = false,
-                    Message = "Validation errors occurred.",
-                    Errors = errors,
-                    StatusCode = StatusCodes.Status400BadRequest
-                });
-            }
-
-            var signUpRequest = _mapper.Map<SignUpDto>(signUpVM);
-            var signUpResponse = await _authService.SignUpAsync(signUpRequest);
-
-            if (!signUpResponse.IsSuccess)
-            {
-                return BadRequest(new ApiResponse<string>
-                {
-                    IsSuccess = false,
-                    Message = "Registration failed.",
-                    Errors = signUpResponse.Errors?.ToList() ?? new List<string> { "Unknown error occurred." },
-                    StatusCode = StatusCodes.Status400BadRequest
-                });
-            }
-
-            if (!double.TryParse(await _authService.GetJwtExpirationMinutes(), out var expirationMinutes))
-                expirationMinutes = 60;
-
-            Response.Cookies.Append("access-token", signUpResponse.Token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(expirationMinutes),
-                Path = "/"
-            });
-
-            return CreatedAtAction(nameof(GetCurrentUser), null, new ApiResponse<AuthResponseVM>
-            {
-                Data = new AuthResponseVM
-                {
-                    Token = signUpResponse.Token,
-                    ExpiresIn = (int)expirationMinutes * 60
+                    Token = accessToken,
+                    TokenType = "Bearer",
+                    ExpiresIn = GetAccessTokenExpirySeconds(),
                 },
-                IsSuccess = true,
-                Message = "Registration successful.",
-                StatusCode = StatusCodes.Status201Created
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred during sign-up.");
-            return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<string>
-            {
-                IsSuccess = false,
-                Message = "An internal server error occurred.",
-                Errors = new List<string> { ex.Message },
-                StatusCode = StatusCodes.Status500InternalServerError
-            });
-        }
+                "Registration successul"
+            )
+        );
     }
 
     [Authorize]
     [HttpPost(ApiRoutes.Auth.SignOut)]
-    public new async Task<IActionResult> SignOut()
+    public async new Task<ActionResult<ApiResponse<object>>> SignOut()
     {
-        try
-        {
-            await _authService.SignOutAsync();
-            Response.Cookies.Delete("access-token");
+        var userId = _authService.GetUserId(User);
+        var refreshToken = Request.Cookies["refreshToken"];
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
-            return Ok(new ApiResponse<string>
-            {
-                Data = null,
-                IsSuccess = true,
-                Message = "Sign-out successful.",
-                StatusCode = StatusCodes.Status200OK
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred during sign-out.");
-            return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<string>
-            {
-                IsSuccess = false,
-                Message = "An internal server error occurred.",
-                Errors = new List<string> { ex.Message },
-                StatusCode = StatusCodes.Status500InternalServerError
-            });
-        }
+        if (!string.IsNullOrEmpty(userId))
+            await _authService.SignOutAsync(userId, refreshToken, ipAddress);
+
+        DeleteRefreshTokenCookie();
+
+        return Ok(ApiResponse<object>.Success(null, "Sign out successful"));
+    }
+
+    [Authorize]
+    [HttpPost(ApiRoutes.Auth.SignOutAll)]
+    public async Task<ActionResult<ApiResponse<object>>> SignOutAllDevices()
+    {
+        var userId = _authService.GetUserId(User);
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        if (!string.IsNullOrEmpty(userId))
+            await _authService.SignOutAllDevicesAsync(userId, ipAddress);
+
+        DeleteRefreshTokenCookie();
+
+        return Ok(ApiResponse<object>.Success(null, "Sign out from all devices successful"));
     }
 
     [HttpPost(ApiRoutes.Auth.RefreshToken)]
-    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenVM refreshTokenVM)
+    public async Task<ActionResult<ApiResponse<AuthTokenResponse>>> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-        try
-        {
-            if (string.IsNullOrEmpty(refreshTokenVM.Token))
-            {
-                return BadRequest(new ApiResponse<string>
-                {
-                    IsSuccess = false,
-                    Message = "Refresh token is required.",
-                    StatusCode = StatusCodes.Status400BadRequest
-                });
-            }
+        var refreshToken = Request.Cookies["refreshToken"];
+        if (string.IsNullOrEmpty(refreshToken))
+            return Unauthorized(ApiResponse<AuthTokenResponse>.Failure("Refresh token not fount"));
 
-            var response = await _authService.RefreshJwtTokenAsync(refreshTokenVM.Token);
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var (accessToken, newRefreshToken) = await _authService.RefreshTokenAsync(refreshToken, ipAddress);
 
-            if (!response.IsSuccess)
-            {
-                return Unauthorized(new ApiResponse<string>
-                {
-                    IsSuccess = false,
-                    Message = "Token refresh failed",
-                    Errors = response.Errors?.ToList() ?? new List<string> { "Invalid token" },
-                    StatusCode = StatusCodes.Status401Unauthorized
-                });
-            }
+        SetRefreshTokenCookie(newRefreshToken);
 
-            if (!double.TryParse(await _authService.GetJwtExpirationMinutes(), out var expirationMinutes))
-                expirationMinutes = 60;
-
-            Response.Cookies.Append("access-token", response.Token, new CookieOptions
+        return Ok(ApiResponse<AuthTokenResponse>.Success(
+            new AuthTokenResponse
             {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(expirationMinutes),
-                Path = "/"
-            });
-
-            return CreatedAtAction(nameof(GetCurrentUser), null, new ApiResponse<AuthResponseVM>
-            {
-                Data = new AuthResponseVM
-                {
-                    Token = response.Token,
-                    ExpiresIn = (int)expirationMinutes * 60
-                },
-                IsSuccess = true,
-                Message = "Token refresh successful.",
-                StatusCode = StatusCodes.Status201Created
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during token refresh");
-            return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<string>
-            {
-                IsSuccess = false,
-                Message = "An error occurred during token refresh",
-                Errors = new List<string> { ex.Message },
-                StatusCode = StatusCodes.Status500InternalServerError
-            });
-        }
+                Token = newRefreshToken,
+                TokenType = "Bearer",
+                ExpiresIn = GetAccessTokenExpirySeconds()
+            },
+            "Token refreshed"
+        ));
     }
 
     [HttpGet(ApiRoutes.Auth.CheckAuth)]
-    public IActionResult CheckAuth()
+    public ActionResult<ApiResponse<AuthStatusResponse>> CheckAuth()
     {
-        try
-        {
-            var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+        var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
 
-            if (!isAuthenticated)
+        return Ok(ApiResponse<AuthStatusResponse>.Success(
+            new AuthStatusResponse
             {
-                return Ok(new ApiResponse<AuthStatusVM>
-                {
-                    Data = new AuthStatusVM
-                    {
-                        IsAuthenticated = false
-                    },
-                    Message = "User is not authenticated",
-                    IsSuccess = true,
-                    StatusCode = StatusCodes.Status200OK
-                });
-            }
-
-            var authStatus = new AuthStatusVM
-            {
-                IsAuthenticated = true,
+                IsAuthenticated = isAuthenticated,
+                UserId = isAuthenticated ? _authService.GetUserId(User) : null,
                 UserName = User.Identity?.Name,
-                Claims = User.Claims.Select(c => new ClaimsVM
-                {
-                    Type = c.Type,
-                    Value = c.Value
-                }).ToList()
-            };
-
-            return Ok(new ApiResponse<AuthStatusVM>
-            {
-                Data = authStatus,
-                Message = "Authentication status retrieved successfully",
-                IsSuccess = true,
-                StatusCode = StatusCodes.Status200OK
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking authentication status");
-            return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<string>
-            {
-                IsSuccess = false,
-                Message = "An error occurred while checking authentication status",
-                Errors = new List<string> { ex.Message },
-                StatusCode = StatusCodes.Status500InternalServerError
-            });
-        }
+                Email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+            }
+        ));
     }
 
+    [Authorize]
     [HttpGet(ApiRoutes.Auth.GetCurrentUser)]
-    public async Task<IActionResult> GetCurrentUser()
+    public ActionResult<ApiResponse<CurrentUserResponse>> GetCurrentUser()
     {
-        try
-        {
-            var userId = _authService.GetUserId(User);
+        var userId = _authService.GetUserId(User);
 
-            if (string.IsNullOrEmpty(userId))
+        return Ok(ApiResponse<CurrentUserResponse>.Success(
+            new CurrentUserResponse
             {
-                return Unauthorized(new ApiResponse<string>
-                {
-                    IsSuccess = false,
-                    Message = "User is not authenticated.",
-                    Errors = new List<string> { "Token not contain userId" },
-                    StatusCode = StatusCodes.Status401Unauthorized
-                });
-            }
-
-            var userInfo = new CurrentUserVM
-            {
-                UserId = userId,
+                UserId = userId ?? string.Empty,
                 FullName = User.FindFirst("FullName")?.Value,
-                UserName = User.FindFirst("UserName")?.Value,
-                Email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
-            };
+                UserName = User.Identity?.Name,
+                Email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value,
+                Role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
+            }
+        ));
+    }
 
-            return Ok(new ApiResponse<CurrentUserVM>
-            {
-                Data = userInfo,
-                IsSuccess = true,
-                Message = "User information retrieved successfully.",
-                StatusCode = StatusCodes.Status200OK
-            });
-        }
-        catch (Exception ex)
+    private void SetRefreshTokenCookie(string refreshToken)
+    {
+        var cookieOptions = new CookieOptions
         {
-            _logger.LogError(ex, "An error occurred while retrieving current user information.");
-            return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<string>
-            {
-                IsSuccess = false,
-                Message = "An internal server error occurred.",
-                Errors = new List<string> { ex.Message },
-                StatusCode = StatusCodes.Status500InternalServerError
-            });
-        }
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddDays(int.Parse(_configuration["Jwt:RefreshTokenExpiryDays"] ?? "7")),
+            Path = "/"
+        };
+
+        Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+    }
+
+    private void DeleteRefreshTokenCookie()
+    {
+        Response.Cookies.Delete("refreshToken");
+    }
+
+    private int GetAccessTokenExpirySeconds()
+    {
+        return int.Parse(_configuration["Jwt:ExpiryMinutes"] ?? "15") * 60;
     }
 }

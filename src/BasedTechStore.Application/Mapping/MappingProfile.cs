@@ -2,8 +2,6 @@
 using BasedTechStore.Application.DTOs.Cart;
 using BasedTechStore.Application.DTOs.Categories;
 using BasedTechStore.Application.DTOs.Identity;
-using BasedTechStore.Application.DTOs.Identity.Response;
-using BasedTechStore.Application.DTOs.Product;
 using BasedTechStore.Application.DTOs.Specifications;
 using BasedTechStore.Domain.Entities.Cart;
 using BasedTechStore.Domain.Entities.Categories;
@@ -31,10 +29,10 @@ namespace BasedTechStore.Application.Mapping
             // Mapping AppUserDto -> UserProfileDto
             CreateMap<AppUserDto, UserProfileDto>()
                 .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.PhoneNumber));
-                //.ForMember(dest => dest.BirthDate, opt => opt.Ignore()) // Якщо немає BirthDate у AppUserDto
-                //.ForMember(dest => dest.Address, opt => opt.Ignore()) // Якщо немає Address у AppUserDto
-                //.ForMember(dest => dest.City, opt => opt.Ignore()) // Якщо немає City у AppUserDto
-                //.ForMember(dest => dest.Country, opt => opt.Ignore()); // Якщо немає Country у AppUserDto
+            //.ForMember(dest => dest.BirthDate, opt => opt.Ignore()) // Якщо немає BirthDate у AppUserDto
+            //.ForMember(dest => dest.Address, opt => opt.Ignore()) // Якщо немає Address у AppUserDto
+            //.ForMember(dest => dest.City, opt => opt.Ignore()) // Якщо немає City у AppUserDto
+            //.ForMember(dest => dest.Country, opt => opt.Ignore()); // Якщо немає Country у AppUserDto
 
             // Mapping AuthenticationResponse
             CreateMap<AppUser, AuthenticationResponse>()

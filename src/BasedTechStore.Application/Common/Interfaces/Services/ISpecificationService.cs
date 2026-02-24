@@ -1,5 +1,4 @@
 ﻿using BasedTechStore.Application.DTOs.Specifications;
-using Microsoft.EntityFrameworkCore;
 
 namespace BasedTechStore.Application.Common.Interfaces.Services
 {
@@ -27,5 +26,5 @@ namespace BasedTechStore.Application.Common.Interfaces.Services
         Task SaveProductSpecificationsAsync(Guid productId, List<ProductSpecificationDto> productSpecifications);
         Task SaveAllSpecificationsAsync(List<SpecificationCategoryDto> createdCategories, List<SpecificationCategoryDto> updatedCategories,
             List<SpecificationCategoryDto> deletedCategories, List<SpecificationTypeDto> createdTypes, List<SpecificationTypeDto> updatedTypes, List<SpecificationTypeDto> deletedTypes);
-    }   
+    }
 }

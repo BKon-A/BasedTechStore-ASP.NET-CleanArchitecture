@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BasedTechStore.Application.DTOs.Categories
+﻿namespace BasedTechStore.Application.DTOs.Categories
 {
-    public class CategoryDto
+    public sealed record CategoryDto
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public int DisplayOrder { get; set; }
+        public bool IsActive { get; set; }
         public List<SubCategoryDto> SubCategories { get; set; } = new();
     }
 }

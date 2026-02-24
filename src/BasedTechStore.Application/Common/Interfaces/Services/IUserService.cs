@@ -1,7 +1,4 @@
 ﻿using BasedTechStore.Application.DTOs.Identity;
-using BasedTechStore.Application.DTOs.Identity.Response;
-using BasedTechStore.Domain.Entities.Identity;
-using Microsoft.AspNetCore.Identity;
 
 namespace BasedTechStore.Application.Common.Interfaces.Services
 {

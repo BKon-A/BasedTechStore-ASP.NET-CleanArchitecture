@@ -5,19 +5,27 @@ using BasedTechStore.Domain.Entities.Identity;
 using BasedTechStore.Infrastructure.Persistence;
 using BasedTechStore.Infrastructure.Persistence.Seed;
 using BasedTechStore.Infrastructure.Services.Carts;
-using BasedTechStore.Infrastructure.Services.Identity;
 using BasedTechStore.Infrastructure.Services.Products;
-using BasedTechStore.Infrastructure.Services.Specifications;
 using BasedTechStore.Common.Extensions;
 using BasedTechStore.Common.Constants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
-using BasedTechStore.Common.Middlewares;
 using BasedTechStore.Common.Mapping;
 using Microsoft.AspNetCore.DataProtection;
 using BasedTechStore.Application.Common.Interfaces.Persistence;
+using BasedTechStore.Infrastructure.Services.Auth;
+using BasedTechStore.WebApi.Middlewares;
+using BasedTechStore.Application.Common.Interfaces.Repositories;
+using BasedTechStore.Infrastructure.Repositories;
+using BasedTechStore.Infrastructure.Services.Orders;
+using BasedTechStore.Application.Common.Interfaces.Authorization;
+using BasedTechStore.Domain.Entities.Orders;
+using BasedTechStore.Infrastructure.Policies;
+using BasedTechStore.Infrastructure.Services.Categories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,14 +79,7 @@ builder.Services.AddCommonCors(builder.Configuration);
 
 builder.Services.AddHttpsRedirection(options =>
 {
-    if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")
-    {
-        options.HttpsPort = null; // Standard HTTPS port
-    }
-    else
-    {
-        options.HttpsPort = 7250; // Local development HTTPS port
-    }
+    options.HttpsPort = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true" ? null : 7250;
 });
 
 builder.Services.AddDataProtection(option =>
@@ -88,21 +89,69 @@ builder.Services.AddDataProtection(option =>
     .PersistKeysToFileSystem(new DirectoryInfo("/app/data-protection-keys"))
     .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
 
+// =============== JWT Authentication ===============
+var jwtSecret = builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret is not configured");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer is not configured");
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is not configured");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+    .AddJwtBearer(options =>
+    {
+        options.SaveToken = true;
+        options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ClockSkew = TimeSpan.Zero
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                    context.Response.Headers.Append("Token-Expired", "true");
+
+                return Task.CompletedTask;
+            },
+            OnChallenge = context =>
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+                var result = JsonSerializer.Serialize(new
+                {
+                    isSuccess = false,
+                    message = "Not authorized access to resource",
+                    statusCode = 401
+                });
+                
+                return context.Response.WriteAsync(result);
+            }
+        };
+    });
+
 // Add Authentication using Common extensions
 builder.Services.AddAuthorization();
 
-// Add Database
+// =============== Database ===============
 var connectionString = builder.Configuration.GetConnectionString("SqlServerConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(connectionString, sqlServerOptions =>
     {
-        sqlServerOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorNumbersToAdd: null
-        );
-
+        sqlServerOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
         sqlServerOptions.CommandTimeout(120);
         sqlServerOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
     });
@@ -115,7 +164,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 // Add Identity
-builder.Services.AddIdentity<AppUser, AppUserRole>(options =>
+builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
     // Password settings
     options.Password.RequiredLength = 6;
@@ -123,13 +172,6 @@ builder.Services.AddIdentity<AppUser, AppUserRole>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireNonAlphanumeric = false;
-
-    //// User settings
-    //options.User.RequireUniqueEmail = true;
-
-    //// Sign in settings
-    //options.SignIn.RequireConfirmedEmail = false;
-    //options.SignIn.RequireConfirmedPhoneNumber = false;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddApiEndpoints();
@@ -141,39 +183,36 @@ builder.Services.AddAutoMapper(config =>
     config.AddProfile(typeof(ViewModelMappingProfile));
 });
 
-// Add JWT Token Handler
-builder.Services.AddSingleton<JwtSecurityTokenHandler>();
-
 // Add Application Services
 builder.Services.AddScoped<IAppDbContext>(provider => provider.GetRequiredService<AppDbContext>());
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
+builder.Services.AddScoped<IAuthService, AuthenticationService>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<ISpecificationService, SpecificationService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ICartService, CartService>();
+
+builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+
+builder.Services.AddScoped<IAuthorizationPolicy<Order>, OrderAuthorizationPolicy>();
+
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 builder.Services.AddScoped<IManagerSeeder, ManagerSeeder>();
 
-// Add Caching
+// =============== Caching ===============
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
 
-// Add Logging
+// =============== Logging ===============
 builder.Services.AddLogging();
 
 // Build the app
 var app = builder.Build();
-
-var logger = app.Services.GetService<ILogger<Program>>();
-var connectionStringLog = app.Configuration.GetConnectionString("SqlServerConnection");
-
-logger?.LogInformation("🔍 Configuration Sources:");
-foreach (var source in builder.Configuration.Sources)
-{
-    logger?.LogInformation("  - {Source}: {Type}", source, source.GetType().Name);
-}
-logger?.LogInformation("🔍 Connection String Source: {Source}",
-    string.IsNullOrEmpty(connectionStringLog) ? "NOT FOUND" : "Found");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -211,14 +250,14 @@ var corsPolicy = app.Environment.IsDevelopment()
     : AppConstants.CorsPolicy.Production;
 app.UseCors(corsPolicy);
 
-app.UseMiddleware<JwtCookieMiddleware>();
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 // Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
 // Map Identity API endpoints for authentication
-app.MapIdentityApi<AppUser>();
+//app.MapIdentityApi<AppUser>();
 
 // Map controllers
 app.MapControllers();

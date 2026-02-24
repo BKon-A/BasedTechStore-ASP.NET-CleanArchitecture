@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BasedTechStore.Application.DTOs.Wishlist
+﻿namespace BasedTechStore.Application.DTOs.Wishlist
 {
-    public class WishlistDto
+    public sealed record WishlistDto
     {
     }
 }

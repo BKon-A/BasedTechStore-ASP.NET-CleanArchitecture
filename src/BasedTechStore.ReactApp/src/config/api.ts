@@ -14,6 +14,7 @@ export const API_ENDPOINTS = {
     SIGN_UP: '/auth/signUp',
     SIGN_OUT: '/auth/signOut',
     REFRESH: '/auth/refresh',
+    GET_CURRENT_USER: '/auth/user',
     CHECK: '/auth/check',
   },
   

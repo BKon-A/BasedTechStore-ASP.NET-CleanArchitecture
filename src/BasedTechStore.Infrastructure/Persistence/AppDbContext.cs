@@ -5,13 +5,13 @@ using BasedTechStore.Domain.Entities.Identity;
 using BasedTechStore.Domain.Entities.Products;
 using BasedTechStore.Domain.Entities.Categories;
 using BasedTechStore.Domain.Entities.Orders;
-using System.Net.Http.Headers;
 using BasedTechStore.Domain.Entities.Specifications;
 using BasedTechStore.Domain.Entities.Cart;
+using Microsoft.AspNetCore.Identity;
 
 namespace BasedTechStore.Infrastructure.Persistence
 {
-    public class AppDbContext : IdentityDbContext<AppUser, AppUserRole, string>, IAppDbContext
+    public class AppDbContext : IdentityDbContext<AppUser, IdentityRole, string>, IAppDbContext
     {
         public DbSet<Category> Categories { get; set; }
         public DbSet<SubCategory> SubCategories { get; set; }
@@ -23,6 +23,7 @@ namespace BasedTechStore.Infrastructure.Persistence
         public DbSet<SpecificationType> SpecificationTypes { get; set; }
         public DbSet<SpecificationCategory> SpecificationCategories { get; set; }
         public DbSet<ProductSpecification> ProductSpecifications { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -31,9 +32,6 @@ namespace BasedTechStore.Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            //modelBuilder.Entity<AppUser>().ToTable("Users");
-            //modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
             modelBuilder.Entity<Product>()
                 .Property(p => p.Price)
@@ -127,6 +125,31 @@ namespace BasedTechStore.Infrastructure.Persistence
                 .HasForeignKey(ps => ps.SpecificationTypeId)
                 .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
 
+            // =============== Indentity configuration =======================
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AppUser>()
+                .Property(u => u.Role)
+                .HasMaxLength(50)
+                .IsRequired()
+                .HasDefaultValue(Domain.Constants.Roles.Customer);
+
+            modelBuilder.Entity<AppUser>()
+                .Property(u => u.CustomPermissions)
+                .HasMaxLength(2000);
+
+            modelBuilder.Entity<AppUser>()
+                .HasIndex(u => u.Email)
+                .IsUnique()
+                .HasFilter("[Email] IS NOT NULL");
+
+            modelBuilder.Entity<AppUser>()
+                .HasIndex(u => u.Role);
+
             // =============== Indexing for faster lookups ===================
             modelBuilder.Entity<Cart>()
                 .HasIndex(c => c.UserId);
@@ -152,6 +175,19 @@ namespace BasedTechStore.Infrastructure.Persistence
             modelBuilder.Entity<ProductSpecification>()
                 .Property(ps => ps.Value)
                 .HasColumnType("nvarchar(max)");
+
+            // RefreshToken indexes
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(rt => rt.Token);
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(rt => rt.UserId);
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(rt => rt.JwtId);
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(rt => new { rt.UserId, rt.IsRevoked, rt.IsUsed });
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

@@ -1,8 +1,6 @@
-﻿using BasedTechStore.Domain.Entities.Products;
-
-namespace BasedTechStore.Application.DTOs.Cart
+﻿namespace BasedTechStore.Application.DTOs.Cart
 {
-    public class CartDto
+    public sealed record CartDto
     {
         public Guid Id { get; set; }
         public string? UserId { get; set; }

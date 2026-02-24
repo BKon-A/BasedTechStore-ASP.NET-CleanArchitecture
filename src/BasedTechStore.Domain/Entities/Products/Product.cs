@@ -1,6 +1,5 @@
 ﻿using BasedTechStore.Domain.Entities.Categories;
 using BasedTechStore.Domain.Entities.Specifications;
-using System.Collections;
 
 namespace BasedTechStore.Domain.Entities.Products
 {
@@ -12,12 +11,14 @@ namespace BasedTechStore.Domain.Entities.Products
         public string? ImageUrl { get; set; }
         public string? Brand { get; set; }
         public decimal Price { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public int Stock { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
         public Guid SubCategoryId { get; set; }
         public SubCategory SubCategory { get; set; } = null!;
 
-        public ICollection<ProductSpecification> ProductSpecifications { get; set; } = new List<ProductSpecification>();
+        public ICollection<ProductSpecification> Specifications { get; set; } = new List<ProductSpecification>();
     }
 }

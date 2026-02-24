@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BasedTechStore.Application.DTOs.Compare
+﻿namespace BasedTechStore.Application.DTOs.Compare
 {
-    public class CompareDto
+    public sealed record CompareDto
     {
     }
 }

@@ -23,8 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BasedTechStore.Infrastructure\BasedTechStore.Infrastructure.csproj" />
+	<ProjectReference Include="..\BasedTechStore.Application\BasedTechStore.Application.csproj" />
 	<ProjectReference Include="..\BasedTechStore.Common\BasedTechStore.Common.csproj" />
+	<ProjectReference Include="..\BasedTechStore.Infrastructure\BasedTechStore.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

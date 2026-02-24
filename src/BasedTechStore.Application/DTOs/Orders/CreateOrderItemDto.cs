@@ -1,0 +1,13 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BasedTechStore.Application.DTOs.Orders
+{
+    public sealed record CreateOrderItemDto
+    {
+        [Required]
+        public Guid ProductId { get; set; }
+        [Required]
+        [Range(1, int.MaxValue)]
+        public int Quantity { get; set; }
+    }
+}

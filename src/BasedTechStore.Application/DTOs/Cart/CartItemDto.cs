@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BasedTechStore.Application.DTOs.Cart
+﻿namespace BasedTechStore.Application.DTOs.Cart
 {
-    public class CartItemDto
+    public sealed record CartItemDto
     {
         public Guid Id { get; set; }
         public Guid ProductId { get; set; }
